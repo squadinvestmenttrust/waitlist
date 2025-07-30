@@ -4,404 +4,138 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Waitlist</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/akkurat" rel="stylesheet">
     <style>
-        :root {
-            --background-color: #0000FF; /* Dark blue, assuming #000FF was incomplete */
-            --text-color: #FFFFFF;
-            --font-family: 'Montserrat', sans-serif;
-        }
-
         body {
+            background-color: #000FF;
+            color: white;
+            font-family: 'Akkurat', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            font-family: var(--font-family);
-            overflow-x: hidden; /* Prevent horizontal scroll */
-            cursor: default; /* Default cursor */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            min-height: 200vh; /* Make body taller to allow initial scroll */
-        }
-
-        /* Initial Image Styles */
-        #initialImageContainer {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: all 0.3s ease-out; /* Smooth transition for scaling/positioning */
-            z-index: 100; /* Ensure it's on top */
-        }
-
-        #initialImage {
-            max-width: 90vw;
-            max-height: 90vh;
-            display: block;
-            object-fit: contain;
-            transition: all 0.3s ease-out; /* Smooth transition for scaling */
-        }
-
-        #initialImage.scrolled {
-            position: fixed;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%) scale(0.2); /* Smaller and centered at top */
-            max-width: 100px; /* Adjust as needed */
-            max-height: 100px; /* Adjust as needed */
-        }
-
-        /* Content Section */
-        #content {
-            opacity: 0; /* Hidden initially */
-            transition: opacity 1s ease-in;
-            text-align: center;
-            margin-top: 100vh; /* Push content down initially below the image viewport */
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding-bottom: 50px; /* Some padding at the bottom */
-        }
-
-        #content.visible {
-            opacity: 1;
-        }
-
-        /* Welcome Text */
-        #welcomeTextContainer {
-            display: inline-block;
-            white-space: pre; /* Preserve whitespace for block */
-            font-size: 2.5rem;
-            margin-bottom: 40px;
-            color: var(--text-color);
-            text-align: center;
-            line-height: 1; /* For better block cursor alignment */
-        }
-
-        #welcomeText {
-            display: inline-block;
-        }
-
-        .dos-block {
-            display: inline-block;
-            width: 1.5rem; /* Width of the block cursor */
-            height: 2.5rem; /* Height of the block cursor, matching font size */
-            background-color: var(--text-color);
-            vertical-align: middle;
-            animation: blink-caret 0.75s step-end infinite;
-            margin-left: 5px; /* Space between text and cursor */
-        }
-
-        @keyframes blink-caret {
-            from, to { background-color: transparent; }
-            50% { background-color: var(--text-color); }
-        }
-
-        /* Product Image */
-        #productImage {
-            max-width: 50vw;
-            height: auto;
-            display: block;
-            margin: 0 auto 30px auto;
-            opacity: 0; /* Hidden initially */
-            transform: translateY(-50px); /* Start slightly above */
-            transition: opacity 2s ease-out, transform 2s ease-out; /* Slow loading */
-        }
-
-        #productImage.loaded {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* Product Details */
-        #productDetails p {
-            font-size: 1.5rem;
-            margin: 10px 0;
+            overflow-x: hidden;
             text-align: center;
         }
-
-        /* Join Waitlist Button */
-        #joinWaitlistButton {
-            width: 300px;
-            height: 60px;
-            border: 2px solid var(--text-color);
-            color: var(--text-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.8rem;
-            cursor: pointer;
-            position: relative; /* Changed to relative initially */
-            margin-top: 50px;
-            transition: all 0.5s ease; /* Smooth movement */
-            user-select: none; /* Prevent text selection */
-        }
-
-        /* Lockout Screen */
-        #lockoutScreen {
-            position: fixed;
+        .main-img {
+            position: sticky;
             top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            font-size: 2.5rem;
-            text-align: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 1s ease-in, visibility 0s linear 1s; /* Fade in, then show */
-            z-index: 200; /* On top of everything */
+            width: 100%;
+            height: auto;
+            transition: all 0.5s ease;
         }
-
-        #lockoutScreen.visible {
-            opacity: 1;
-            visibility: visible;
-            transition: opacity 1s ease-in, visibility 0s linear 0s; /* Show instantly, then fade */
+        .hidden {
+            display: none;
         }
-
-        #countdown {
+        .dos-text::before {
+            content: '█';
+            animation: blink 1s infinite;
+            margin-right: 5px;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        #waitlist-btn {
+            padding: 10px;
+            border: 2px solid white;
+            display: inline-block;
             margin-top: 20px;
-            font-size: 3rem;
+            cursor: pointer;
+            user-select: none;
+            position: absolute;
+            transition: all 0.3s ease;
         }
-
-        /* Global fade out */
-        .fade-out {
-            opacity: 0 !important;
-            transition: opacity 1s ease-out !important;
+        .product-img {
+            width: 300px;
+            height: auto;
+            overflow: hidden;
+            margin: 0 auto;
         }
     </style>
 </head>
 <body>
-
-    <div id="initialImageContainer">
-        <img id="initialImage" src="https://i.ibb.co/DP0MHnjM/IMG-6365.jpg" alt="Initial image">
-    </div>
-
-    <div id="content">
-        <div id="welcomeTextContainer">
-            <span id="welcomeText"></span><span class="dos-block" id="dosBlock"></span>
-        </div>
-
-        <img id="productImage" src="" alt="Product Image">
-
-        <div id="productDetails">
-            <p>Product: <span id="productName"></span></p>
-            <p>Materials: <span id="productMaterials"></span></p>
-            <p>Price: <span id="productPrice"></span></p>
-            <p>Wait: <span id="productWait"></span></p>
-        </div>
-
-        <div id="joinWaitlistButton">
-            join the waitlist.
-        </div>
-    </div>
-
-    <div id="lockoutScreen">
-        <p><span id="lockoutText"></span></p>
-        <p id="countdown"></p>
-    </div>
+    <img src="https://i.ibb.co/DP0MHnjM/IMG-6365.jpg" class="main-img" id="mainImg">
+    <div id="content"></div>
 
     <script>
-        const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6aU1_jB0juldfdNBs-KX3XLLqOuAoZDNpg_znvr_x1ToUAariHKo2Gz-REVye58V_nenvXETUOTZk/pub?output=csv';
-
-        const initialImageContainer = document.getElementById('initialImageContainer');
-        const initialImage = document.getElementById('initialImage');
-        const content = document.getElementById('content');
-        const welcomeTextContainer = document.getElementById('welcomeTextContainer');
-        const welcomeTextSpan = document.getElementById('welcomeText');
-        const dosBlock = document.getElementById('dosBlock');
-        const productImage = document.getElementById('productImage');
-        const productName = document.getElementById('productName');
-        const productMaterials = document.getElementById('productMaterials');
-        const productPrice = document.getElementById('productPrice');
-        const productWait = document.getElementById('productWait');
-        const joinWaitlistButton = document.getElementById('joinWaitlistButton');
-        const lockoutScreen = document.getElementById('lockoutScreen');
-        const lockoutTextSpan = document.getElementById('lockoutText');
-        const countdownSpan = document.getElementById('countdown');
-
-        let data = {}; // To store spreadsheet data
-        let joinButtonClicks = 0;
-        let originalContentMarginTop; // To store original margin-top for content
-
-        document.addEventListener('DOMContentLoaded', () => {
-            // Store original content margin-top to adjust for initial image
-            originalContentMarginTop = parseFloat(getComputedStyle(content).marginTop);
-            initialImageContainer.style.position = 'fixed';
-            initialImageContainer.style.top = '0';
-            initialImageContainer.style.left = '0';
-        });
-
-        // Function to parse CSV data
-        async function fetchCSVData() {
-            try {
-                const response = await fetch(SPREADSHEET_URL);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const csvText = await response.text();
-                const lines = csvText.split('\n');
-                if (lines.length > 1) {
-                    const header = lines[0].split(',');
-                    const values = lines[1].split(',');
-                    // Assuming B1 is product, B2 is image URL, B3 materials, B4 price, B5 wait
-                    data = {
-                        product: values[1] ? values[1].trim() : '',
-                        imageUrl: values[2] ? values[2].trim() : '', // B2
-                        materials: values[3] ? values[3].trim() : '', // B3
-                        price: values[4] ? values[4].trim() : '', // B4
-                        wait: values[5] ? values[5].trim() : ''   // B5
-                    };
-                }
-            } catch (error) {
-                console.error('Error fetching or parsing CSV:', error);
-                // Fallback data or show error message
-                data = {
-                    product: 'Product Unavailable',
-                    imageUrl: '',
-                    materials: 'N/A',
-                    price: 'N/A',
-                    wait: 'N/A'
-                };
-            }
+        async function fetchSpreadsheetData() {
+            const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6aU1_jB0juldfdNBs-KX3XLLqOuAoZDNpg_znvr_x1ToUAariHKo2Gz-REVye58V_nenvXETUOTZk/pub?output=csv';
+            const response = await fetch(url);
+            const data = await response.text();
+            const rows = data.split('\n').map(row => row.split(','));
+            return rows;
         }
 
-        // Typewriter effect function
-        function typeWriter(element, text, delay = 100) {
+        function typeText(text, element, delay = 100) {
             let i = 0;
-            return new Promise(resolve => {
-                function type() {
-                    if (i < text.length) {
-                        element.textContent += text.charAt(i);
-                        i++;
-                        setTimeout(type, delay);
-                    } else {
-                        resolve();
-                    }
+            const interval = setInterval(() => {
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i);
+                    i++;
+                } else {
+                    clearInterval(interval);
                 }
-                type();
+            }, delay);
+        }
+
+        function slowLoadImage(url, element) {
+            let img = new Image();
+            img.src = url;
+            img.onload = function() {
+                element.src = url;
+                element.style.clipPath = 'inset(100% 0 0 0)';
+                element.style.transition = 'clip-path 4s linear';
+                setTimeout(() => element.style.clipPath = 'inset(0 0 0 0)', 100);
+            };
+        }
+
+        window.onload = async () => {
+            const data = await fetchSpreadsheetData();
+
+            let content = document.getElementById('content');
+            content.innerHTML = `<h2 class='dos-text'></h2>`;
+            typeText('welcome to waitlist.', document.querySelector('.dos-text'));
+
+            window.addEventListener('scroll', () => {
+                const img = document.getElementById('mainImg');
+                if (window.scrollY > 0) img.style.width = '100px';
+                else img.style.width = '100%';
             });
-        }
 
-        // Initial image scroll effect
-        window.addEventListener('scroll', () => {
-            const scrollY = window.scrollY;
-            const viewportHeight = window.innerHeight;
-
-            if (scrollY > viewportHeight * 0.1) { // When scrolled down 10% of viewport height
-                initialImage.classList.add('scrolled');
-                // Adjust content margin-top so it doesn't jump when image scales
-                content.style.marginTop = `${originalContentMarginTop - (viewportHeight * 0.1)}px`;
-                content.classList.add('visible'); // Show content gradually
-            } else {
-                initialImage.classList.remove('scrolled');
-                content.style.marginTop = `${originalContentMarginTop}px`;
-                content.classList.remove('visible');
-            }
-        });
-
-        // Main sequence of events
-        async function startWebsiteSequence() {
-            await fetchCSVData();
-
-            // Wait for a short moment after initial load for image to settle
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            // Welcome text
-            await typeWriter(welcomeTextSpan, 'welcome to waitlist.');
-            dosBlock.style.display = 'none'; // Hide blinking block after text is typed
-
-            // Product image loading
-            if (data.imageUrl) {
-                productImage.src = data.imageUrl;
-                // Add a small delay for "old internet loading" feel
-                await new Promise(resolve => setTimeout(resolve, 500));
-                productImage.classList.add('loaded'); // Trigger CSS transition
-                // Wait for image transition to complete (approx 2s as per CSS)
-                await new Promise(resolve => setTimeout(resolve, 2000));
-            } else {
-                console.warn("Product image URL not found in spreadsheet.");
-            }
-
-
-            // Populate product details
-            productName.textContent = data.product;
-            productMaterials.textContent = data.materials;
-            productPrice.textContent = data.price;
-            productWait.textContent = data.wait;
-
-            // Make product details visible (they are visible by default once image is loaded)
-        }
-
-        // Initialize
-        startWebsiteSequence();
-
-        // Join Waitlist Button Logic
-        joinWaitlistButton.addEventListener('click', () => {
-            joinButtonClicks++;
-
-            if (joinButtonClicks === 1) {
-                // First click: move to a new random location
-                joinWaitlistButton.style.position = 'absolute';
-                joinWaitlistButton.style.left = `${Math.random() * (window.innerWidth - joinWaitlistButton.offsetWidth)}px`;
-                joinWaitlistButton.style.top = `${Math.random() * (window.innerHeight - joinWaitlistButton.offsetHeight)}px`;
-            } else if (joinButtonClicks === 2) {
-                // Second click: move to another new random location
-                joinWaitlistButton.style.left = `${Math.random() * (window.innerWidth - joinWaitlistButton.offsetWidth)}px`;
-                joinWaitlistButton.style.top = `${Math.random() * (window.innerHeight - joinWaitlistButton.offsetHeight)}px`;
-            } else if (joinButtonClicks === 3) {
-                // Third click: blackout and lockout sequence
-                document.body.classList.add('fade-out'); // Fade out everything
-                content.classList.add('fade-out'); // Ensure content also fades
-                initialImageContainer.classList.add('fade-out'); // Initial image also fades
+            setTimeout(() => {
+                content.innerHTML += `<img class='product-img' id='prodImg'>`;
+                slowLoadImage(data[1][1], document.getElementById('prodImg'));
 
                 setTimeout(() => {
-                    // Make everything invisible
-                    document.body.style.display = 'none';
-                    content.style.display = 'none';
-                    initialImageContainer.style.display = 'none';
+                    content.innerHTML += `
+                    <p>Product: ${data[0][1]}</p>
+                    <p>Materials: ${data[2][1]}</p>
+                    <p>Price: ${data[3][1]}</p>
+                    <p>Wait: ${data[4][1]}</p>
+                    <div id='waitlist-btn'>join the waitlist.</div>`;
 
-                    lockoutScreen.classList.add('visible'); // Show lockout screen
-                    lockoutTextSpan.textContent = ''; // Clear text for typewriter effect
-                    countdownSpan.textContent = '';
-
-                    // Start typewriter effect for lockout text
-                    typeWriter(lockoutTextSpan, 'You are locked out of waitlist for ').then(() => {
-                        let countdown = 900;
-                        countdownSpan.textContent = countdown;
-
-                        const countdownInterval = setInterval(() => {
-                            countdown--;
-                            countdownSpan.textContent = countdown;
-                            if (countdown <= 0) {
-                                clearInterval(countdownInterval);
-                                countdownSpan.textContent = '0';
-                                // Optionally, reset the page or allow access again
-                                // For this example, it stays at 0
-                            }
-                        }, 1000);
-                    });
-                }, 2000); // Wait for fade-out transition (1s) + an extra second
-            }
-        });
-
-        // Set initial state of content to be pushed down
-        window.addEventListener('load', () => {
-            content.style.marginTop = `${window.innerHeight}px`;
-        });
-
+                    const btn = document.getElementById('waitlist-btn');
+                    let clickCount = 0;
+                    btn.onclick = () => {
+                        clickCount++;
+                        if (clickCount < 3) {
+                            btn.style.top = Math.random() * 80 + 'vh';
+                            btn.style.left = Math.random() * 80 + 'vw';
+                        } else {
+                            document.body.innerHTML = '';
+                            setTimeout(() => {
+                                document.body.innerHTML = `<h2 class='dos-text'></h2>`;
+                                let seconds = 900;
+                                const countdown = setInterval(() => {
+                                    document.querySelector('.dos-text').innerHTML = `You are locked out of waitlist for ${seconds} seconds`;
+                                    seconds--;
+                                    if (seconds < 0) clearInterval(countdown);
+                                }, 1000);
+                            }, 2000);
+                        }
+                    };
+                }, 4500);
+            }, 3000);
+        };
     </script>
 </body>
 </html>
