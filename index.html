@@ -2,161 +2,259 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Waitlist</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
+
         body {
-            margin: 0;
             background-color: #0000FF;
             color: white;
-            font-family: 'Helvetica Neue', sans-serif;
-            overflow: hidden;
-        }
-
-        #container {
+            font-family: 'Roboto Mono', monospace;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
             text-align: center;
-            padding: 20px;
         }
 
-        #hero-img {
-            max-width: 80%;
-            height: auto;
-            margin: 2rem auto;
-            display: block;
+        #initial-image-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.5s ease-in-out;
+            z-index: 100;
         }
 
-        .dos-text {
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 1.5rem;
-            margin-top: 1rem;
+        #initial-image {
+            width: 50vw;
+            max-width: 400px;
+            transition: all 0.5s ease-in-out;
         }
 
-        #product-img {
-            max-width: 60%;
-            display: block;
-            margin: 2rem auto;
-            image-rendering: pixelated;
+        #initial-image-container.scrolled {
+            top: 20px;
+            transform: translate(-50%, 0);
+        }
+
+        #initial-image.scrolled {
+            width: 100px;
+        }
+
+        .content {
+            padding-top: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #welcome-text {
+            font-size: 2rem;
+            margin: 50px 0;
+        }
+
+        .dos-cursor {
+            display: inline-block;
+            background-color: white;
+            width: 1rem;
+            height: 2rem;
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            from, to { background-color: transparent }
+            50% { background-color: white; }
+        }
+
+        #product-image-container {
+            width: 80%;
+            max-width: 600px;
+            height: 0;
+            overflow: hidden;
+            margin: 20px 0;
+            transition: height 2s linear;
+        }
+
+        #product-image {
+            width: 100%;
         }
 
         #product-info {
-            max-width: 600px;
-            text-align: left;
-            margin: auto;
-            font-size: 1.2rem;
-            white-space: pre-wrap;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            line-height: 1.8;
         }
 
-        #waitlist-box {
+        #join-button {
             border: 2px solid white;
-            display: inline-block;
-            padding: 1rem 2rem;
-            margin-top: 2rem;
+            padding: 10px 20px;
             cursor: pointer;
-            transition: all 0.5s ease;
-            font-weight: bold;
+            margin-top: 40px;
+            transition: transform 0.3s ease-out;
+            position: relative;
         }
 
-        #lockout {
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 2rem;
+        #lockout-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0000FF;
             display: none;
-            text-align: center;
-            padding-top: 20vh;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            z-index: 200;
         }
     </style>
 </head>
 <body>
-    <div id="container">
-        <img id="hero-img" src="https://i.ibb.co/DP0MHnjM/IMG-6365.jpg" alt="Waitlist Hero">
-        <div class="dos-text" id="welcome"></div>
-        <img id="product-img" src="" style="display: none;">
-        <div id="product-info"></div>
-        <div id="waitlist-box">join the waitlist.</div>
+
+    <div id="initial-image-container">
+        <img id="initial-image" src="https://i.ibb.co/DP0MHnjM/IMG-6365.jpg" alt="Initial Image">
     </div>
-    <div id="lockout"></div>
+
+    <div class="content" id="main-content">
+        <h1 id="welcome-text"></h1>
+        <div id="product-image-container">
+            <img id="product-image" src="" alt="Product Image">
+        </div>
+        <div id="product-info">
+            <p id="product-name"></p>
+            <p id="product-materials"></p>
+            <p id="product-price"></p>
+            <p id="product-wait"></p>
+        </div>
+        <div id="join-button">join the waitlist</div>
+    </div>
+
+    <div id="lockout-screen">
+        <p id="lockout-text"></p>
+    </div>
 
     <script>
-        const welcomeText = "welcome to waitlist.";
-        let waitlistBox = document.getElementById('waitlist-box');
-        let lockoutDiv = document.getElementById('lockout');
-        let welcomeDiv = document.getElementById('welcome');
-        let productImg = document.getElementById('product-img');
-        let productInfo = document.getElementById('product-info');
-        let moveCount = 0;
-        const waitlistMessages = [
-            "Product: ",
-            "Materials: ",
-            "Price: ",
-            "Wait: "
-        ];
-        const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT6aU1_jB0juldfdNBs-KX3XLLqOuAoZDNpg_znvr_x1ToUAariHKo2Gz-REVye58V_nenvXETUOTZk/pub?output=csv";
+        const spreadsheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6aU1_jB0juldfdNBs-KX3XLLqOuAoZDNpg_znvr_x1ToUAariHKo2Gz-REVye58V_nenvXETUOTZk/pub?output=csv';
 
-        // Typewriter welcome message
-        let index = 0;
-        function typeWelcome() {
-            if (index < welcomeText.length) {
-                welcomeDiv.innerHTML += "<span class='block'>█</span>" + welcomeText.charAt(index);
-                index++;
-                setTimeout(() => {
-                    welcomeDiv.innerHTML = welcomeText.substring(0, index);
-                    typeWelcome();
-                }, 100);
+        // --- 1. Initial Setup & Scroll Animation ---
+        const initialImageContainer = document.getElementById('initial-image-container');
+        const initialImage = document.getElementById('initial-image');
+        let welcomeStarted = false;
+
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                initialImageContainer.classList.add('scrolled');
+                initialImage.classList.add('scrolled');
+                if (!welcomeStarted) {
+                    welcomeStarted = true;
+                    startWelcomeAnimation();
+                }
             } else {
-                setTimeout(loadData, 500);
-            }
-        }
-
-        // Simulate image loading top-down
-        function loadImageProgressively(url) {
-            let chunks = 30;
-            let i = 1;
-            let interval = setInterval(() => {
-                productImg.style.display = 'block';
-                productImg.style.clipPath = `inset(0 0 ${100 - (i / chunks) * 100}% 0)`;
-                i++;
-                if (i > chunks) clearInterval(interval);
-            }, 50);
-            productImg.src = url;
-        }
-
-        function loadData() {
-            fetch(csvUrl)
-                .then(res => res.text())
-                .then(text => {
-                    const rows = text.trim().split('\n');
-                    const data = rows.map(r => r.split(','));
-                    const productName = data[0][1];
-                    const productImage = data[1][1];
-                    const material = data[2][1];
-                    const price = data[3][1];
-                    const wait = data[4][1];
-
-                    loadImageProgressively(productImage);
-                    productInfo.innerHTML = `${waitlistMessages[0]}${productName}\n${waitlistMessages[1]}${material}\n${waitlistMessages[2]}${price}\n${waitlistMessages[3]}${wait}`;
-                });
-        }
-
-        let positions = ["translate(50px, 0)", "translate(-50px, 50px)"];
-
-        waitlistBox.addEventListener('click', () => {
-            moveCount++;
-            if (moveCount <= 2) {
-                waitlistBox.style.transform = positions[moveCount - 1];
-            } else {
-                document.getElementById('container').style.display = 'none';
-                lockoutDiv.style.display = 'block';
-                let seconds = 900;
-                let timer = setInterval(() => {
-                    lockoutDiv.innerText = `You are locked out of waitlist for ${seconds} seconds`;
-                    seconds--;
-                    if (seconds < 0) {
-                        clearInterval(timer);
-                        location.reload();
-                    }
-                }, 1000);
+                initialImageContainer.classList.remove('scrolled');
+                initialImage.classList.remove('scrolled');
             }
         });
 
-        typeWelcome();
+        // --- 2. Welcome Text Animation ---
+        const welcomeTextElement = document.getElementById('welcome-text');
+        const welcomeText = 'welcome to waitlist.';
+        
+        function typeWriter(text, element, i, callback) {
+            if (i < text.length) {
+                element.innerHTML = text.substring(0, i + 1) + '<span class="dos-cursor"></span>';
+                setTimeout(() => typeWriter(text, element, i + 1, callback), 100);
+            } else {
+                element.innerHTML = text; // Remove cursor at the end
+                if (callback) callback();
+            }
+        }
+
+        function startWelcomeAnimation() {
+            typeWriter(welcomeText, welcomeTextElement, 0, () => {
+                // --- 3. Fetch Data and Load Product ---
+                fetchProductData();
+            });
+        }
+
+        // --- 4. Fetch and Display Product Data ---
+        const productImageContainer = document.getElementById('product-image-container');
+        const productImage = document.getElementById('product-image');
+        const productInfo = document.getElementById('product-info');
+
+        function fetchProductData() {
+            fetch(spreadsheetUrl)
+                .then(response => response.text())
+                .then(data => {
+                    const rows = data.split('\\n');
+                    const productData = rows[1].split(',');
+
+                    // Load product image
+                    productImage.src = productData[1];
+                    productImage.onload = () => {
+                        const imgHeight = productImage.clientHeight;
+                        productImageContainer.style.height = imgHeight + 'px';
+                        setTimeout(displayProductInfo, 2000, productData);
+                    };
+                });
+        }
+        
+        function displayProductInfo(data) {
+            document.getElementById('product-name').textContent = `Product: ${data[0]}`;
+            document.getElementById('product-materials').textContent = `Materials: ${data[2]}`;
+            document.getElementById('product-price').textContent = `Price: ${data[3]}`;
+            document.getElementById('product-wait').textContent = `Wait: ${data[4]}`;
+            productInfo.style.opacity = '1';
+        }
+
+
+        // --- 5. Interactive Button ---
+        const joinButton = document.getElementById('join-button');
+        let pressCount = 0;
+
+        joinButton.addEventListener('click', () => {
+            pressCount++;
+            if (pressCount < 3) {
+                moveButton();
+            } else {
+                startLockoutSequence();
+            }
+        });
+
+        function moveButton() {
+            const x = Math.random() * (window.innerWidth - joinButton.clientWidth);
+            const y = Math.random() * (window.innerHeight - joinButton.clientHeight);
+            joinButton.style.position = 'absolute';
+            joinButton.style.top = `${y}px`;
+            joinButton.style.left = `${x}px`;
+        }
+
+        // --- 6. Lockout Sequence ---
+        const mainContent = document.getElementById('main-content');
+        const lockoutScreen = document.getElementById('lockout-screen');
+        const lockoutTextElement = document.getElementById('lockout-text');
+
+        function startLockoutSequence() {
+            mainContent.style.display = 'none';
+            initialImageContainer.style.display = 'none';
+
+            setTimeout(() => {
+                lockoutScreen.style.display = 'flex';
+                const lockoutMessage = 'You are locked out of waitlist for ';
+                let seconds = 900;
+                
+                const countdown = setInterval(() => {
+                    lockoutTextElement.textContent = `${lockoutMessage}${seconds} seconds`;
+                    seconds--;
+                    if (seconds < 0) {
+                        clearInterval(countdown);
+                        lockoutTextElement.textContent = 'You may now refresh the page.';
+                    }
+                }, 1000);
+
+            }, 2000);
+        }
+
     </script>
 </body>
 </html>
