@@ -1,162 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Waitlist</title>
-    <style>
-        body {
-            margin: 0;
-            background-color: #0000FF;
-            color: white;
-            font-family: 'Helvetica Neue', sans-serif;
-            overflow: hidden;
-        }
-
-        #container {
-            text-align: center;
-            padding: 20px;
-        }
-
-        #hero-img {
-            max-width: 80%;
-            height: auto;
-            margin: 2rem auto;
-            display: block;
-        }
-
-        .dos-text {
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 1.5rem;
-            margin-top: 1rem;
-        }
-
-        #product-img {
-            max-width: 60%;
-            display: block;
-            margin: 2rem auto;
-            image-rendering: pixelated;
-        }
-
-        #product-info {
-            max-width: 600px;
-            text-align: left;
-            margin: auto;
-            font-size: 1.2rem;
-            white-space: pre-wrap;
-        }
-
-        #waitlist-box {
-            border: 2px solid white;
-            display: inline-block;
-            padding: 1rem 2rem;
-            margin-top: 2rem;
-            cursor: pointer;
-            transition: all 0.5s ease;
-            font-weight: bold;
-        }
-
-        #lockout {
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 2rem;
-            display: none;
-            text-align: center;
-            padding-top: 20vh;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Waitlist</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #0000ff;
+      color: white;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      overflow: hidden;
+    }
+    .center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+    .dos-text {
+      display: inline-block;
+      white-space: pre;
+    }
+    #productImage {
+      width: 300px;
+      display: block;
+      margin: 2rem auto 1rem;
+      image-rendering: pixelated;
+      clip-path: inset(100% 0 0 0);
+      transition: clip-path 3s linear;
+    }
+    .info {
+      text-align: left;
+      max-width: 300px;
+      margin: auto;
+      font-size: 1.2rem;
+    }
+    .waitlist-btn {
+      display: inline-block;
+      border: 2px solid white;
+      padding: 1rem;
+      margin: 2rem auto;
+      cursor: pointer;
+      transition: all 0.5s ease-in-out;
+      position: relative;
+    }
+    #lockout {
+      display: none;
+      text-align: center;
+      font-size: 1.5rem;
+      margin-top: 3rem;
+    }
+  </style>
 </head>
 <body>
-    <div id="container">
-        <img id="hero-img" src="https://i.ibb.co/DP0MHnjM/IMG-6365.jpg" alt="Waitlist Hero">
-        <div class="dos-text" id="welcome"></div>
-        <img id="product-img" src="" style="display: none;">
-        <div id="product-info"></div>
-        <div id="waitlist-box">join the waitlist.</div>
+  <div id="content" class="center">
+    <img id="mainImage" src="https://i.ibb.co/DP0MHnjM/IMG-6365.jpg" alt="Waitlist" width="300" /><br />
+    <div class="dos-text" id="introText"></div>
+  </div>
+
+  <div id="productSection" style="display:none; text-align: center;">
+    <img id="productImage" src="" alt="Product" />
+    <div class="info">
+      <div id="product"></div>
+      <div id="materials"></div>
+      <div id="price"></div>
+      <div id="wait"></div>
     </div>
-    <div id="lockout"></div>
+    <div class="waitlist-btn" id="waitlistBtn">join the waitlist.</div>
+  </div>
 
-    <script>
-        const welcomeText = "welcome to waitlist.";
-        let waitlistBox = document.getElementById('waitlist-box');
-        let lockoutDiv = document.getElementById('lockout');
-        let welcomeDiv = document.getElementById('welcome');
-        let productImg = document.getElementById('product-img');
-        let productInfo = document.getElementById('product-info');
-        let moveCount = 0;
-        const waitlistMessages = [
-            "Product: ",
-            "Materials: ",
-            "Price: ",
-            "Wait: "
-        ];
-        const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT6aU1_jB0juldfdNBs-KX3XLLqOuAoZDNpg_znvr_x1ToUAariHKo2Gz-REVye58V_nenvXETUOTZk/pub?output=csv";
+  <div id="lockout"></div>
 
-        // Typewriter welcome message
-        let index = 0;
-        function typeWelcome() {
-            if (index < welcomeText.length) {
-                welcomeDiv.innerHTML += "<span class='block'>█</span>" + welcomeText.charAt(index);
-                index++;
-                setTimeout(() => {
-                    welcomeDiv.innerHTML = welcomeText.substring(0, index);
-                    typeWelcome();
-                }, 100);
-            } else {
-                setTimeout(loadData, 500);
-            }
-        }
+  <script>
+    const intro = "welcome to waitlist.";
+    let i = 0;
 
-        // Simulate image loading top-down
-        function loadImageProgressively(url) {
-            let chunks = 30;
-            let i = 1;
-            let interval = setInterval(() => {
-                productImg.style.display = 'block';
-                productImg.style.clipPath = `inset(0 0 ${100 - (i / chunks) * 100}% 0)`;
-                i++;
-                if (i > chunks) clearInterval(interval);
-            }, 50);
-            productImg.src = url;
-        }
+    function typeText() {
+      if (i < intro.length) {
+        document.getElementById("introText").innerHTML += '<span style="margin-right:5px">█</span>' + intro.charAt(i);
+        i++;
+        setTimeout(typeText, 100);
+      } else {
+        setTimeout(showProduct, 1000);
+      }
+    }
 
-        function loadData() {
-            fetch(csvUrl)
-                .then(res => res.text())
-                .then(text => {
-                    const rows = text.trim().split('\n');
-                    const data = rows.map(r => r.split(','));
-                    const productName = data[0][1];
-                    const productImage = data[1][1];
-                    const material = data[2][1];
-                    const price = data[3][1];
-                    const wait = data[4][1];
+    async function showProduct() {
+      document.getElementById("content").style.display = "none";
+      document.getElementById("productSection").style.display = "block";
 
-                    loadImageProgressively(productImage);
-                    productInfo.innerHTML = `${waitlistMessages[0]}${productName}\n${waitlistMessages[1]}${material}\n${waitlistMessages[2]}${price}\n${waitlistMessages[3]}${wait}`;
-                });
-        }
+      const res = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vT6aU1_jB0juldfdNBs-KX3XLLqOuAoZDNpg_znvr_x1ToUAariHKo2Gz-REVye58V_nenvXETUOTZk/pub?output=csv");
+      const data = await res.text();
+      const lines = data.trim().split("\n");
+      const fields = lines.map(l => l.split(","));
 
-        let positions = ["translate(50px, 0)", "translate(-50px, 50px)"];
+      const productImage = document.getElementById("productImage");
+      productImage.src = fields[1][0];
+      setTimeout(() => {
+        productImage.style.clipPath = "inset(0 0 0 0)";
+      }, 200);
 
-        waitlistBox.addEventListener('click', () => {
-            moveCount++;
-            if (moveCount <= 2) {
-                waitlistBox.style.transform = positions[moveCount - 1];
-            } else {
-                document.getElementById('container').style.display = 'none';
-                lockoutDiv.style.display = 'block';
-                let seconds = 900;
-                let timer = setInterval(() => {
-                    lockoutDiv.innerText = `You are locked out of waitlist for ${seconds} seconds`;
-                    seconds--;
-                    if (seconds < 0) {
-                        clearInterval(timer);
-                        location.reload();
-                    }
-                }, 1000);
-            }
-        });
+      document.getElementById("product").textContent = `Product: ${fields[0][0]}`;
+      document.getElementById("materials").textContent = `Materials: ${fields[2][0]}`;
+      document.getElementById("price").textContent = `Price: ${fields[3][0]}`;
+      document.getElementById("wait").textContent = `Wait: ${fields[4][0]}`;
+    }
 
-        typeWelcome();
-    </script>
+    let moveCount = 0;
+    const btn = document.getElementById("waitlistBtn");
+    btn.addEventListener("click", () => {
+      moveCount++;
+      if (moveCount < 3) {
+        btn.style.top = `${Math.random() * 70 + 10}%`;
+        btn.style.left = `${Math.random() * 70 + 10}%`;
+        btn.style.position = "absolute";
+      } else {
+        document.body.innerHTML = "";
+        const lockoutDiv = document.getElementById("lockout");
+        document.body.appendChild(lockoutDiv);
+        lockoutDiv.style.display = "block";
+        let counter = 900;
+        const interval = setInterval(() => {
+          lockoutDiv.textContent = `You are locked out of waitlist for ${counter} seconds.`;
+          counter--;
+          if (counter < 0) {
+            clearInterval(interval);
+            location.reload();
+          }
+        }, 1000);
+      }
+    });
+
+    window.onload = typeText;
+  </script>
 </body>
 </html>
