@@ -6,13 +6,14 @@
     <title>Waitlist</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
     <style>
         /* --- Base Styles --- */
         :root {
             --brand-blue: #0000FF;
             --brand-white: #FFFFFF;
-            --font-main: 'Work Sans', 'Akkurat', 'Helvetica Neue', sans-serif;
+            /* Using 'Inter' as a robust, clean sans-serif font */
+            --font-main: 'Inter', 'Helvetica Neue', 'Arial', sans-serif;
         }
 
         body {
@@ -20,41 +21,64 @@
             color: var(--brand-white);
             font-family: var(--font-main);
             margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            padding: 40px 20px;
+            /* Allow vertical scrolling if content overflows, hide horizontal */
+            overflow-y: auto;
+            overflow-x: hidden;
             min-height: 100vh;
-            text-align: center;
-            overflow: hidden; /* Prevents scrollbars during animations */
         }
 
+        /* --- Main Layout Container --- */
+        #main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            width: 100%;
+        }
+        
+        /* --- Logo Styling & Animation --- */
+        #logo-container {
+            position: relative;
+            z-index: 10;
+            width: 90%;
+            max-width: 350px;
+            /* Smooth transition for moving and scaling */
+            transition: transform 1s ease-in-out, margin-bottom 1s ease-in-out;
+        }
+
+        #initial-image {
+            width: 100%;
+            display: block;
+        }
+        
+        /* This class is added via JS to move the logo */
+        #logo-container.is-persistent {
+            transform: scale(0.4);
+            margin-bottom: -120px; /* Pulls content up as logo shrinks */
+        }
+        
         /* --- Screen Containers --- */
         .screen {
-            display: none; /* Hidden by default */
+            display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             width: 100%;
-            height: 100%;
             opacity: 0;
-            transition: opacity 0.5s ease-in-out;
+            transition: opacity 0.7s ease-in-out;
+            margin-top: 1rem;
         }
 
         .screen.visible {
-            display: flex;
             opacity: 1;
         }
 
-        /* --- Initial Welcome Screen --- */
-        #initial-image {
-            max-width: 90%;
-            max-height: 40vh;
-            object-fit: contain;
-        }
-
+        /* --- Welcome Text --- */
         #welcome-text-container {
-            margin-top: 2rem;
+            margin-top: 1rem;
+            min-height: 3rem; /* Prevents layout shift when text appears */
             font-size: clamp(1.2rem, 3vw, 1.8rem); /* Responsive font size */
             letter-spacing: 3px;
             font-weight: 500;
@@ -116,12 +140,22 @@
             font-weight: 500;
             letter-spacing: 1px;
             cursor: pointer;
+            z-index: 20;
             opacity: 0;
             /* Position will be set by JS */
             transition: opacity 1s ease-in, top 0.4s ease-out, left 0.4s ease-out;
         }
 
         /* --- Lockout Screen --- */
+        #lockout-screen {
+            position: fixed; /* Takes over the whole screen */
+            top: 0;
+            left: 0;
+            height: 100%;
+            background-color: var(--brand-blue);
+            z-index: 99;
+        }
+        
         #lockout-text-container {
             font-size: clamp(1.2rem, 3vw, 1.8rem);
             letter-spacing: 2px;
@@ -131,25 +165,33 @@
 </head>
 <body>
 
-    <div id="initial-screen" class="screen visible">
-        <img id="initial-image" src="https://i.ibb.co/DP0MHnjM/IMG-6365.jpg" alt="Waitlist Brand Image">
-        <p id="welcome-text-container">
-            <span id="welcome-text"></span><span id="cursor"></span>
-        </p>
+    <div id="main-container">
+
+        <div id="logo-container">
+            <img id="initial-image" src="https://i.ibb.co/DP0MHnjM/IMG-6365.jpg" alt="Waitlist Brand Image">
+        </div>
+
+        <div id="welcome-screen" class="screen visible">
+             <p id="welcome-text-container">
+                <span id="welcome-text"></span><span id="cursor"></span>
+            </p>
+        </div>
+
+        <div id="product-screen" class="screen">
+            <div id="product-image-wrapper">
+                <img id="product-image" src="" alt="Product">
+            </div>
+            <div id="product-details">
+                <p id="product-name"></p>
+                <p id="product-materials"></p>
+                <p id="product-price"></p>
+                <p id="product-wait"></p>
+            </div>
+        </div>
+
     </div>
 
-    <div id="product-screen" class="screen">
-        <div id="product-image-wrapper">
-            <img id="product-image" src="" alt="Product">
-        </div>
-        <div id="product-details">
-            <p id="product-name"></p>
-            <p id="product-materials"></p>
-            <p id="product-price"></p>
-            <p id="product-wait"></p>
-        </div>
-        <button id="join-button">join the waitlist</button>
-    </div>
+    <button id="join-button">join the waitlist</button>
 
     <div id="lockout-screen" class="screen">
         <p id="lockout-text-container">
@@ -164,7 +206,10 @@
         let joinButtonClickCount = 0;
 
         // --- DOM Element References ---
-        const initialScreen = document.getElementById('initial-screen');
+        const logoContainer = document.getElementById('logo-container');
+        
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const welcomeTextContainer = document.getElementById('welcome-text-container');
         const welcomeText = document.getElementById('welcome-text');
         const cursor = document.getElementById('cursor');
 
@@ -176,6 +221,7 @@
         const productMaterials = document.getElementById('product-materials');
         const productPrice = document.getElementById('product-price');
         const productWait = document.getElementById('product-wait');
+        
         const joinButton = document.getElementById('join-button');
         
         const lockoutScreen = document.getElementById('lockout-screen');
@@ -199,24 +245,23 @@
                 // 1. Welcome Animation
                 await sleep(1000);
                 await typeWriter(welcomeText, 'welcome to waitlist.');
-                cursor.style.display = 'none'; // Hide cursor after typing
+                cursor.style.display = 'none';
                 await sleep(2000);
 
-                // 2. Fetch Data from Google Sheet
+                // 2. Hide welcome text & move logo to top
+                welcomeScreen.classList.remove('visible');
+                logoContainer.classList.add('is-persistent');
+                await sleep(1000); // Wait for logo transition
+
+                // 3. Fetch Data from Google Sheet
                 const response = await fetch(SPREADSHEET_URL);
                 if (!response.ok) throw new Error('Network response was not ok.');
                 const csvText = await response.text();
                 
-                // Parse CSV: get the second line (index 1) and split by comma
-                // Also removes quotes from CSV values, if they exist
                 const dataRow = csvText.split('\n')[1].split(',').map(item => item.trim().replace(/^"|"$/g, ''));
                 const [prod, img, mats, price, wait] = dataRow;
 
-                // 3. Transition to Product Screen
-                initialScreen.classList.remove('visible');
-                await sleep(500); // Wait for fade-out transition
-
-                // 4. Populate Product Data
+                // 4. Populate and reveal Product Screen
                 productImage.src = img;
                 productName.textContent = `Product: ${prod}`;
                 productMaterials.textContent = `Materials: ${mats}`;
@@ -224,19 +269,18 @@
                 productWait.textContent = `Wait: ${wait}`;
                 
                 productScreen.classList.add('visible');
-                await sleep(100); // Allow screen to become visible before animating
+                await sleep(100);
 
-                // 5. Animate Product Image Reveal (Top-Down)
+                // 5. Animate Product Image Reveal
                 productImageWrapper.style.clipPath = 'inset(0 0 0 0)';
-                await sleep(2500); // Must match CSS transition duration
+                await sleep(2500);
 
                 // 6. Reveal Product Details and Button
                 productDetails.style.opacity = '1';
                 
-                // Set initial button position (centered below details)
                 const detailsRect = productDetails.getBoundingClientRect();
                 joinButton.style.top = `${detailsRect.bottom + 40}px`;
-                joinButton.style.left = '50%';
+                joinButton.style.left = `${detailsRect.left + detailsRect.width / 2}px`;
                 joinButton.style.transform = 'translateX(-50%)';
                 joinButton.style.opacity = '1';
 
@@ -251,8 +295,7 @@
             joinButtonClickCount++;
 
             if (joinButtonClickCount < 3) {
-                // Move button to a random position on screen
-                const margin = 20; // Px from edge
+                const margin = 20;
                 const btnWidth = joinButton.offsetWidth;
                 const btnHeight = joinButton.offsetHeight;
 
@@ -261,9 +304,8 @@
                 
                 joinButton.style.left = `${newLeft}px`;
                 joinButton.style.top = `${newTop}px`;
-                joinButton.style.transform = 'none'; // Reset transform if it was used
+                joinButton.style.transform = 'none';
             } else {
-                // Trigger the lockout sequence
                 startLockoutSequence();
             }
         }
@@ -271,7 +313,9 @@
         async function startLockoutSequence() {
             // 1. Hide everything
             productScreen.classList.remove('visible');
-            await sleep(500); // Wait for fade out
+            joinButton.style.opacity = '0';
+            logoContainer.style.opacity = '0';
+            await sleep(500);
 
             // 2. Blank screen for 3 seconds
             await sleep(3000);
@@ -301,7 +345,6 @@
         // --- Event Listeners ---
         window.addEventListener('load', startMainSequence);
         joinButton.addEventListener('click', handleJoinButtonClick);
-
     </script>
 </body>
 </html>
