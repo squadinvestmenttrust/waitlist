@@ -1,141 +1,228 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Waitlist</title>
-    <link href="https://fonts.cdnfonts.com/css/akkurat" rel="stylesheet">
-    <style>
-        body {
-            background-color: #000FF;
-            color: white;
-            font-family: 'Akkurat', Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
-            text-align: center;
-        }
-        .main-img {
-            position: sticky;
-            top: 0;
-            width: 100%;
-            height: auto;
-            transition: all 0.5s ease;
-        }
-        .hidden {
-            display: none;
-        }
-        .dos-text::before {
-            content: '█';
-            animation: blink 1s infinite;
-            margin-right: 5px;
-        }
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-        }
-        #waitlist-btn {
-            padding: 10px;
-            border: 2px solid white;
-            display: inline-block;
-            margin-top: 20px;
-            cursor: pointer;
-            user-select: none;
-            position: absolute;
-            transition: all 0.3s ease;
-        }
-        .product-img {
-            width: 300px;
-            height: auto;
-            overflow: hidden;
-            margin: 0 auto;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Waitlist</title>
+
+<!-- Akkurat isn’t freely hosted, so fall back to a clean Swiss‑style sans serif -->
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#0000FF;      /* pure blue background */
+  --fg:#FFFFFF;      /* white text */
+  --font:'Akkurat','IBM Plex Sans','Helvetica','Arial',sans-serif;
+}
+
+html,body{
+  margin:0;
+  padding:0;
+  background:var(--bg);
+  color:var(--fg);
+  font-family:var(--font);
+  overflow-x:hidden;
+}
+
+/* hero image that shrinks on scroll and sticks to top */
+#top-banner{
+  position:sticky;
+  top:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:60vh;
+  z-index:10;
+  pointer-events:none;
+}
+#heroImg{
+  max-width:80vw;
+  height:auto;
+  transition:transform 0.3s ease;
+}
+
+/* main content */
+.content{
+  max-width:900px;
+  margin:0 auto;
+  text-align:center;
+  padding:4rem 1rem;
+}
+
+/* typewriter “welcome to waitlist.” */
+#typewriter{
+  font-size:2rem;
+  white-space:pre;
+  overflow:hidden;
+  border-right:0.15em solid var(--fg);
+  width:0;
+  margin:0 auto 3rem;
+  animation:typing 4s steps(28,end) forwards, blink 0.8s step-end infinite;
+}
+@keyframes typing{to{width:28ch;}}
+@keyframes blink{50%{border-color:transparent;}}
+
+/* product image reveals top‑down */
+#productImgWrapper{
+  overflow:hidden;
+  display:inline-block;
+}
+#productImg{
+  display:block;
+  max-width:80vw;
+  height:auto;
+  clip-path:inset(0 0 100% 0);
+  transition:clip-path 3s linear;
+}
+
+#productDetails p{
+  margin:0.5rem 0;
+  font-size:1.1rem;
+}
+
+/* waitlist button */
+#waitlistBtn{
+  background:transparent;
+  color:var(--fg);
+  border:2px solid var(--fg);
+  padding:1rem 2rem;
+  font-size:1rem;
+  cursor:pointer;
+  position:relative;
+  transition:transform 0.3s ease;
+}
+
+.hide{display:none!important;}
+
+#lockMsg{
+  font-size:1.5rem;
+  white-space:pre;
+  visibility:hidden;
+}
+</style>
 </head>
+
 <body>
-    <img src="https://i.ibb.co/DP0MHnjM/IMG-6365.jpg" class="main-img" id="mainImg">
-    <div id="content"></div>
 
-    <script>
-        async function fetchSpreadsheetData() {
-            const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6aU1_jB0juldfdNBs-KX3XLLqOuAoZDNpg_znvr_x1ToUAariHKo2Gz-REVye58V_nenvXETUOTZk/pub?output=csv';
-            const response = await fetch(url);
-            const data = await response.text();
-            const rows = data.split('\n').map(row => row.split(','));
-            return rows;
-        }
+<!-- hero -->
+<div id="top-banner">
+  <img id="heroImg" src="https://i.ibb.co/DP0MHnjM/IMG-6365.jpg" alt="Hero">
+</div>
 
-        function typeText(text, element, delay = 100) {
-            let i = 0;
-            const interval = setInterval(() => {
-                if (i < text.length) {
-                    element.innerHTML += text.charAt(i);
-                    i++;
-                } else {
-                    clearInterval(interval);
-                }
-            }, delay);
-        }
+<!-- main content -->
+<div class="content" id="mainContent">
+  <h1 id="typewriter"></h1>
 
-        function slowLoadImage(url, element) {
-            let img = new Image();
-            img.src = url;
-            img.onload = function() {
-                element.src = url;
-                element.style.clipPath = 'inset(100% 0 0 0)';
-                element.style.transition = 'clip-path 4s linear';
-                setTimeout(() => element.style.clipPath = 'inset(0 0 0 0)', 100);
-            };
-        }
+  <div id="productSection">
+    <div id="productImgWrapper">
+      <img id="productImg" alt="Product">
+    </div>
+    <div id="productDetails">
+      <p id="productName"></p>
+      <p id="materials"></p>
+      <p id="price"></p>
+      <p id="wait"></p>
+    </div>
+  </div>
 
-        window.onload = async () => {
-            const data = await fetchSpreadsheetData();
+  <button id="waitlistBtn">join the waitlist.</button>
+</div>
 
-            let content = document.getElementById('content');
-            content.innerHTML = `<h2 class='dos-text'></h2>`;
-            typeText('welcome to waitlist.', document.querySelector('.dos-text'));
+<div id="lockMsg"></div>
 
-            window.addEventListener('scroll', () => {
-                const img = document.getElementById('mainImg');
-                if (window.scrollY > 0) img.style.width = '100px';
-                else img.style.width = '100%';
-            });
+<script>
+// hero shrink on scroll
+const heroImg=document.getElementById('heroImg');
+window.addEventListener('scroll',()=>{
+  const scale=Math.max(0.2,1-window.scrollY/600);
+  heroImg.style.transform=`scale(${scale})`;
+});
 
-            setTimeout(() => {
-                content.innerHTML += `<img class='product-img' id='prodImg'>`;
-                slowLoadImage(data[1][1], document.getElementById('prodImg'));
+// typewriter “welcome to waitlist.”
+const welcomeText='welcome to waitlist.';
+const twElem=document.getElementById('typewriter');
 
-                setTimeout(() => {
-                    content.innerHTML += `
-                    <p>Product: ${data[0][1]}</p>
-                    <p>Materials: ${data[2][1]}</p>
-                    <p>Price: ${data[3][1]}</p>
-                    <p>Wait: ${data[4][1]}</p>
-                    <div id='waitlist-btn'>join the waitlist.</div>`;
+function startType(){
+  twElem.textContent='';
+  let i=0;
+  const typer=setInterval(()=>{
+    if(i<=welcomeText.length){
+      twElem.textContent=welcomeText.slice(0,i);
+      i++;
+    }else{
+      clearInterval(typer);
+      loadProduct();
+    }
+  },100);
+}
 
-                    const btn = document.getElementById('waitlist-btn');
-                    let clickCount = 0;
-                    btn.onclick = () => {
-                        clickCount++;
-                        if (clickCount < 3) {
-                            btn.style.top = Math.random() * 80 + 'vh';
-                            btn.style.left = Math.random() * 80 + 'vw';
-                        } else {
-                            document.body.innerHTML = '';
-                            setTimeout(() => {
-                                document.body.innerHTML = `<h2 class='dos-text'></h2>`;
-                                let seconds = 900;
-                                const countdown = setInterval(() => {
-                                    document.querySelector('.dos-text').innerHTML = `You are locked out of waitlist for ${seconds} seconds`;
-                                    seconds--;
-                                    if (seconds < 0) clearInterval(countdown);
-                                }, 1000);
-                            }, 2000);
-                        }
-                    };
-                }, 4500);
-            }, 3000);
-        };
-    </script>
+// fetch spreadsheet data (B1‑B5 second column)
+async function loadProduct(){
+  try{
+    const res=await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vT6aU1_jB0juldfdNBs-KX3XLLqOuAoZDNpg_znvr_x1ToUAariHKo2Gz-REVye58V_nenvXETUOTZk/pub?output=csv');
+    const csv=await res.text();
+    const rows=csv.trim().split(/\r?\n/).map(r=>r.split(','));
+    if(rows.length>=5){
+      const cell=r=>rows[r][1]||'';
+      document.getElementById('productImg').src=cell(1);      // B2
+      document.getElementById('productName').textContent='Product: '+cell(0); // B1
+      document.getElementById('materials').textContent='Materials: '+cell(2); // B3
+      document.getElementById('price').textContent='Price: '+cell(3);         // B4
+      document.getElementById('wait').textContent='Wait: '+cell(4);           // B5
+
+      // reveal image top‑down when loaded
+      document.getElementById('productImg').onload=()=>{
+        requestAnimationFrame(()=>document.getElementById('productImg').style.clipPath='inset(0 0 0 0)');
+      };
+    }
+  }catch(e){console.error(e);}
+}
+
+startType();
+
+// waitlist button behaviour
+const btn=document.getElementById('waitlistBtn');
+let presses=0;
+btn.addEventListener('click',()=>{
+  presses++;
+  if(presses<3){
+    const x=Math.random()*60+20; // random 20–80 vw
+    const y=Math.random()*60+20; // random 20–80 vh
+    btn.style.position='fixed';
+    btn.style.left=x+'vw';
+    btn.style.top=y+'vh';
+  }else{
+    document.getElementById('mainContent').classList.add('hide');
+    document.getElementById('top-banner').classList.add('hide');
+    btn.classList.add('hide');
+    setTimeout(showLockout,2000);
+  }
+});
+
+// lockout screen with countdown
+function showLockout(){
+  const lockMsg=document.getElementById('lockMsg');
+  lockMsg.style.visibility='visible';
+  let remaining=900; // seconds
+  const base='You are locked out of waitlist for ';
+  // first typewriter the phrase
+  let i=0, reveal='';
+  const typer=setInterval(()=>{
+    if(i<base.length){
+      reveal+=base[i++];
+      lockMsg.textContent=reveal;
+    }else{
+      clearInterval(typer);
+      countdown();
+    }
+  },80);
+  function countdown(){
+    lockMsg.textContent=base+remaining+' seconds';
+    if(remaining>0){
+      remaining--;
+      setTimeout(countdown,1000);
+    }
+  }
+}
+</script>
 </body>
 </html>
