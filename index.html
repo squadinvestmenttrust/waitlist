@@ -2,161 +2,339 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Waitlist</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --brand-blue: #0000FF;
+            --brand-white: #FFFFFF;
+            --font-main: 'Inter', 'Helvetica Neue', 'Arial', sans-serif;
+        }
+
         body {
+            background-color: var(--brand-blue);
+            color: var(--brand-white);
+            font-family: var(--font-main);
             margin: 0;
-            background-color: #0000FF;
-            color: white;
-            font-family: 'Helvetica Neue', sans-serif;
-            overflow: hidden;
+            padding: 40px 20px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            min-height: 100vh;
         }
 
-        #container {
+        #main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             text-align: center;
-            padding: 20px;
+            width: 100%;
+        }
+        
+        #logo-container {
+            position: relative;
+            z-index: 10;
+            width: 90%;
+            max-width: 350px;
+            transition: transform 1s ease-in-out, margin-bottom 1s ease-in-out, opacity 0.5s ease-in-out;
         }
 
-        #hero-img {
-            max-width: 80%;
-            height: auto;
-            margin: 2rem auto;
+        #initial-image {
+            width: 100%;
             display: block;
         }
-
-        .dos-text {
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 1.5rem;
+        
+        #logo-container.is-persistent {
+            transform: scale(0.4);
+            margin-bottom: -120px;
+        }
+        
+        .screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            opacity: 0;
+            transition: opacity 0.7s ease-in-out;
             margin-top: 1rem;
         }
 
-        #product-img {
-            max-width: 60%;
-            display: block;
-            margin: 2rem auto;
-            image-rendering: pixelated;
+        .screen.visible {
+            opacity: 1;
         }
 
-        #product-info {
-            max-width: 600px;
-            text-align: left;
-            margin: auto;
-            font-size: 1.2rem;
-            white-space: pre-wrap;
+        #welcome-text-container {
+            margin-top: 1rem;
+            min-height: 3rem;
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            letter-spacing: 3px;
+            font-weight: 500;
         }
 
-        #waitlist-box {
-            border: 2px solid white;
+        #cursor {
             display: inline-block;
-            padding: 1rem 2rem;
-            margin-top: 2rem;
-            cursor: pointer;
-            transition: all 0.5s ease;
-            font-weight: bold;
+            width: 1ch;
+            height: 1.5rem;
+            background-color: var(--brand-white);
+            margin-left: 5px;
+            animation: blink 1s steps(2, start) infinite;
         }
 
-        #lockout {
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 2rem;
-            display: none;
-            text-align: center;
-            padding-top: 20vh;
+        @keyframes blink {
+            to {
+                visibility: hidden;
+            }
+        }
+
+        #product-screen {
+            align-items: flex-start;
+            max-width: 500px;
+        }
+        
+        #product-image-wrapper {
+            width: 100%;
+            clip-path: inset(0 0 100% 0);
+            transition: clip-path 2.5s ease-in-out;
+        }
+
+        #product-image {
+            width: 100%;
+            display: block;
+        }
+
+        #product-details {
+            margin-top: 1.5rem;
+            text-align: left;
+            opacity: 0;
+            transition: opacity 1s ease-in 0.5s;
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+        }
+
+        #product-details p {
+            margin: 0.5rem 0;
+        }
+
+        #join-button {
+            position: absolute;
+            background-color: transparent;
+            border: 2px solid var(--brand-white);
+            color: var(--brand-white);
+            padding: 12px 24px;
+            font-family: var(--font-main);
+            font-size: 1rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+            cursor: pointer;
+            z-index: 20;
+            opacity: 0;
+            visibility: hidden; /* Start hidden */
+            transition: opacity 1s ease-in, top 0.4s ease-out, left 0.4s ease-out;
+        }
+        
+        #join-button.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        #lockout-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background-color: var(--brand-blue);
+            z-index: 99;
+        }
+        
+        #lockout-text-container {
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            letter-spacing: 2px;
+            font-weight: 500;
         }
     </style>
 </head>
 <body>
-    <div id="container">
-        <img id="hero-img" src="https://i.ibb.co/DP0MHnjM/IMG-6365.jpg" alt="Waitlist Hero">
-        <div class="dos-text" id="welcome"></div>
-        <img id="product-img" src="" style="display: none;">
-        <div id="product-info"></div>
-        <div id="waitlist-box">join the waitlist.</div>
+
+    <div id="main-container">
+        <div id="logo-container">
+            <img id="initial-image" src="https://i.ibb.co/DP0MHnjM/IMG-6365.jpg" alt="Waitlist Brand Image">
+        </div>
+        <div id="welcome-screen" class="screen visible">
+             <p id="welcome-text-container">
+                <span id="welcome-text"></span><span id="cursor"></span>
+            </p>
+        </div>
+        <div id="product-screen" class="screen">
+            <div id="product-image-wrapper">
+                <img id="product-image" src="" alt="Product">
+            </div>
+            <div id="product-details">
+                <p id="product-name"></p>
+                <p id="product-materials"></p>
+                <p id="product-price"></p>
+                <p id="product-wait"></p>
+            </div>
+        </div>
     </div>
-    <div id="lockout"></div>
+
+    <button id="join-button">join the waitlist</button>
+
+    <div id="lockout-screen" class="screen">
+        <p id="lockout-text-container">
+            <span id="lockout-prefix"></span><span id="lockout-timer"></span><span id="lockout-suffix"></span>
+        </p>
+    </div>
 
     <script>
-        const welcomeText = "welcome to waitlist.";
-        let waitlistBox = document.getElementById('waitlist-box');
-        let lockoutDiv = document.getElementById('lockout');
-        let welcomeDiv = document.getElementById('welcome');
-        let productImg = document.getElementById('product-img');
-        let productInfo = document.getElementById('product-info');
-        let moveCount = 0;
-        const waitlistMessages = [
-            "Product: ",
-            "Materials: ",
-            "Price: ",
-            "Wait: "
-        ];
-        const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT6aU1_jB0juldfdNBs-KX3XLLqOuAoZDNpg_znvr_x1ToUAariHKo2Gz-REVye58V_nenvXETUOTZk/pub?output=csv";
+        const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6aU1_jB0juldfdNBs-KX3XLLqOuAoZDNpg_znvr_x1ToUAariHKo2Gz-REVye58V_nenvXETUOTZk/pub?output=csv';
+        let joinButtonClickCount = 0;
 
-        // Typewriter welcome message
-        let index = 0;
-        function typeWelcome() {
-            if (index < welcomeText.length) {
-                welcomeDiv.innerHTML += "<span class='block'>█</span>" + welcomeText.charAt(index);
-                index++;
-                setTimeout(() => {
-                    welcomeDiv.innerHTML = welcomeText.substring(0, index);
-                    typeWelcome();
-                }, 100);
-            } else {
-                setTimeout(loadData, 500);
+        const logoContainer = document.getElementById('logo-container');
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const welcomeText = document.getElementById('welcome-text');
+        const cursor = document.getElementById('cursor');
+        const productScreen = document.getElementById('product-screen');
+        const productImageWrapper = document.getElementById('product-image-wrapper');
+        const productImage = document.getElementById('product-image');
+        const productDetails = document.getElementById('product-details');
+        const productName = document.getElementById('product-name');
+        const productMaterials = document.getElementById('product-materials');
+        const productPrice = document.getElementById('product-price');
+        const productWait = document.getElementById('product-wait');
+        const joinButton = document.getElementById('join-button');
+        const lockoutScreen = document.getElementById('lockout-screen');
+        const lockoutPrefix = document.getElementById('lockout-prefix');
+        const lockoutTimer = document.getElementById('lockout-timer');
+        const lockoutSuffix = document.getElementById('lockout-suffix');
+
+        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        async function typeWriter(element, text, speed = 90) {
+            for (let i = 0; i < text.length; i++) {
+                element.textContent += text.charAt(i);
+                await sleep(speed);
             }
         }
-
-        // Simulate image loading top-down
-        function loadImageProgressively(url) {
-            let chunks = 30;
-            let i = 1;
-            let interval = setInterval(() => {
-                productImg.style.display = 'block';
-                productImg.style.clipPath = `inset(0 0 ${100 - (i / chunks) * 100}% 0)`;
-                i++;
-                if (i > chunks) clearInterval(interval);
-            }, 50);
-            productImg.src = url;
-        }
-
-        function loadData() {
-            fetch(csvUrl)
-                .then(res => res.text())
-                .then(text => {
-                    const rows = text.trim().split('\n');
-                    const data = rows.map(r => r.split(','));
-                    const productName = data[0][1];
-                    const productImage = data[1][1];
-                    const material = data[2][1];
-                    const price = data[3][1];
-                    const wait = data[4][1];
-
-                    loadImageProgressively(productImage);
-                    productInfo.innerHTML = `${waitlistMessages[0]}${productName}\n${waitlistMessages[1]}${material}\n${waitlistMessages[2]}${price}\n${waitlistMessages[3]}${wait}`;
-                });
-        }
-
-        let positions = ["translate(50px, 0)", "translate(-50px, 50px)"];
-
-        waitlistBox.addEventListener('click', () => {
-            moveCount++;
-            if (moveCount <= 2) {
-                waitlistBox.style.transform = positions[moveCount - 1];
-            } else {
-                document.getElementById('container').style.display = 'none';
-                lockoutDiv.style.display = 'block';
-                let seconds = 900;
-                let timer = setInterval(() => {
-                    lockoutDiv.innerText = `You are locked out of waitlist for ${seconds} seconds`;
-                    seconds--;
-                    if (seconds < 0) {
-                        clearInterval(timer);
-                        location.reload();
-                    }
-                }, 1000);
+        
+        /**
+         * Parses a single row of CSV text, handling quoted fields.
+         */
+        function parseCsvRow(row) {
+            const result = [];
+            let current = '';
+            let inQuote = false;
+            for (let i = 0; i < row.length; i++) {
+                const char = row[i];
+                if (char === '"' && (i === 0 || row[i-1] !== '\\')) {
+                    inQuote = !inQuote;
+                } else if (char === ',' && !inQuote) {
+                    result.push(current.trim().replace(/^"|"$/g, ''));
+                    current = '';
+                } else {
+                    current += char;
+                }
             }
-        });
+            result.push(current.trim().replace(/^"|"$/g, ''));
+            return result;
+        }
 
-        typeWelcome();
+        async function startMainSequence() {
+            try {
+                await sleep(1000);
+                await typeWriter(welcomeText, 'welcome to waitlist.');
+                cursor.style.display = 'none';
+                await sleep(2000);
+
+                welcomeScreen.classList.remove('visible');
+                logoContainer.classList.add('is-persistent');
+                await sleep(1000);
+
+                const response = await fetch(SPREADSHEET_URL);
+                if (!response.ok) throw new Error('Network response was not ok.');
+                const csvText = await response.text();
+                
+                // Use the robust parser on the second row (index 1) of the CSV data.
+                const dataRow = parseCsvRow(csvText.split('\n')[1]);
+                const [prod, img, mats, price, wait] = dataRow;
+
+                productImage.src = img;
+                productName.textContent = `Product: ${prod}`;
+                productMaterials.textContent = `Materials: ${mats}`;
+                productPrice.textContent = `Price: ${price}`;
+                productWait.textContent = `Wait: ${wait}`;
+                
+                productScreen.classList.add('visible');
+                await sleep(100);
+
+                productImageWrapper.style.clipPath = 'inset(0 0 0 0)';
+                await sleep(2500);
+
+                productDetails.style.opacity = '1';
+                
+                const detailsRect = productDetails.getBoundingClientRect();
+                joinButton.style.top = `${detailsRect.bottom + 40}px`;
+                joinButton.style.left = `${detailsRect.left + detailsRect.width / 2}px`;
+                joinButton.style.transform = 'translateX(-50%)';
+                joinButton.classList.add('visible'); // Use class to show the button
+
+            } catch (error) {
+                console.error("Error during sequence:", error);
+                document.body.innerHTML = `<p style="font-size: 1.5rem;">Failed to load Waitlist. Please check the console or try again later.</p>`;
+            }
+        }
+        
+        function handleJoinButtonClick() {
+            joinButtonClickCount++;
+
+            if (joinButtonClickCount < 3) {
+                const margin = 20;
+                const btnWidth = joinButton.offsetWidth;
+                const btnHeight = joinButton.offsetHeight;
+
+                const newTop = Math.random() * (window.innerHeight - btnHeight - margin * 2) + margin;
+                const newLeft = Math.random() * (window.innerWidth - btnWidth - margin * 2) + margin;
+                
+                joinButton.style.left = `${newLeft}px`;
+                joinButton.style.top = `${newTop}px`;
+                joinButton.style.transform = 'none';
+            } else {
+                startLockoutSequence();
+            }
+        }
+        
+        async function startLockoutSequence() {
+            productScreen.style.opacity = '0';
+            joinButton.classList.remove('visible');
+            logoContainer.style.opacity = '0';
+            await sleep(500);
+
+            await sleep(3000);
+
+            lockoutScreen.classList.add('visible');
+            await typeWriter(lockoutPrefix, 'You are locked out of waitlist for ', 60);
+
+            let seconds = 900;
+            lockoutTimer.textContent = seconds;
+            lockoutSuffix.textContent = ' seconds';
+
+            const countdownInterval = setInterval(() => {
+                seconds--;
+                lockoutTimer.textContent = seconds;
+                if (seconds <= 0) {
+                    clearInterval(countdownInterval);
+                    lockoutPrefix.textContent = 'Reloading...';
+                    lockoutTimer.textContent = '';
+                    lockoutSuffix.textContent = '';
+                    setTimeout(() => location.reload(), 1500);
+                }
+            }, 1000);
+        }
+
+        window.addEventListener('load', startMainSequence);
+        joinButton.addEventListener('click', handleJoinButtonClick);
     </script>
 </body>
 </html>
