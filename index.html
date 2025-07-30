@@ -1,139 +1,196 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Waitlist</title>
   <style>
-    body {
+    html, body {
       margin: 0;
-      background-color: #0000ff;
-      color: white;
-      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #0000FF; /* use full 6-digit hex */
+      color: #FFFFFF;
+      font-family: 'Akkurat', 'Swish School Sans', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: start;
       overflow: hidden;
     }
-    .center {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
+    img.centered {
+      display: block;
+      margin: 2rem auto 0;
+      max-width: 80%;
     }
-    .dos-text {
+    #greeting {
+      font-size: 2rem;
+      margin-top: 1rem;
+      white-space: nowrap;
+    }
+    .block {
       display: inline-block;
-      white-space: pre;
+      width: 1ch;
+      background: #FFFFFF;
+      margin-right: 0.5ch;
     }
     #productImage {
-      width: 300px;
-      display: block;
-      margin: 2rem auto 1rem;
-      image-rendering: pixelated;
-      clip-path: inset(100% 0 0 0);
-      transition: clip-path 3s linear;
+      visibility: hidden;
+      max-width: 80%;
+      margin-top: 2rem;
+      clip-path: inset(0 0 100% 0);
+      transition: clip-path 0.1s linear;
     }
-    .info {
+    #productDetails {
+      visibility: hidden;
+      margin-top: 1rem;
       text-align: left;
-      max-width: 300px;
-      margin: auto;
       font-size: 1.2rem;
+      line-height: 1.4;
     }
-    .waitlist-btn {
-      display: inline-block;
-      border: 2px solid white;
-      padding: 1rem;
-      margin: 2rem auto;
+    #joinBtn {
+      visibility: hidden;
+      margin-top: 2rem;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      color: #FFFFFF;
+      background: transparent;
+      border: 2px solid #FFFFFF;
       cursor: pointer;
-      transition: all 0.5s ease-in-out;
       position: relative;
+      transition: top 0.5s ease, left 0.5s ease;
     }
-    #lockout {
-      display: none;
-      text-align: center;
-      font-size: 1.5rem;
-      margin-top: 3rem;
+    #joinBtn.absolute {
+      position: absolute;
     }
   </style>
 </head>
 <body>
-  <div id="content" class="center">
-    <img id="mainImage" src="https://i.ibb.co/DP0MHnjM/IMG-6365.jpg" alt="Waitlist" width="300" /><br />
-    <div class="dos-text" id="introText"></div>
-  </div>
-
-  <div id="productSection" style="display:none; text-align: center;">
-    <img id="productImage" src="" alt="Product" />
-    <div class="info">
-      <div id="product"></div>
-      <div id="materials"></div>
-      <div id="price"></div>
-      <div id="wait"></div>
-    </div>
-    <div class="waitlist-btn" id="waitlistBtn">join the waitlist.</div>
-  </div>
-
-  <div id="lockout"></div>
+  <img id="introImage" class="centered" src="https://i.ibb.co/DP0MHnjM/IMG-6365.jpg" alt="">
+  <div id="greeting"></div>
+  <img id="productImage" class="centered" alt="Product">
+  <div id="productDetails"></div>
+  <button id="joinBtn">join the waitlist</button>
 
   <script>
-    const intro = "welcome to waitlist.";
-    let i = 0;
+    document.addEventListener('DOMContentLoaded', () => {
+      const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6aU1_jB0juldfdNBs-KX3XLLqOuAoZDNpg_znvr_x1ToUAariHKo2Gz-REVye58V_nenvXETUOTZk/pub?output=csv';
+      const greetingText = 'welcome to waitlist.';
+      const greetingEl = document.getElementById('greeting');
+      const introImage = document.getElementById('introImage');
 
-    function typeText() {
-      if (i < intro.length) {
-        document.getElementById("introText").innerHTML += '<span style="margin-right:5px">█</span>' + intro.charAt(i);
-        i++;
-        setTimeout(typeText, 100);
-      } else {
-        setTimeout(showProduct, 1000);
+      introImage.onload = () => typeGreeting(0);
+
+      function typeGreeting(i) {
+        if (i < greetingText.length) {
+          greetingEl.innerHTML = '<span class="block"></span>' + greetingText.slice(0, i + 1);
+          setTimeout(() => typeGreeting(i + 1), 100);
+        } else {
+          fetchData();
+        }
       }
-    }
 
-    async function showProduct() {
-      document.getElementById("content").style.display = "none";
-      document.getElementById("productSection").style.display = "block";
+      function fetchData() {
+        fetch(sheetUrl)
+          .then(res => res.text())
+          .then(text => {
+            const lines = text.split('\n').filter(l => l.trim());
+            const getVal = idx => {
+              const cols = lines[idx].split(',');
+              return cols.slice(1).join(',').replace(/^"|"$/g, '');
+            };
+            const product = getVal(0);
+            const imageUrl = getVal(1);
+            const materials = getVal(2);
+            const price = getVal(3);
+            const wait = getVal(4);
+            showProduct(imageUrl, product, materials, price, wait);
+          });
+      }
 
-      const res = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vT6aU1_jB0juldfdNBs-KX3XLLqOuAoZDNpg_znvr_x1ToUAariHKo2Gz-REVye58V_nenvXETUOTZk/pub?output=csv");
-      const data = await res.text();
-      const lines = data.trim().split("\n");
-      const fields = lines.map(l => l.split(","));
+      function showProduct(imgUrl, product, materials, price, wait) {
+        const imgEl = document.getElementById('productImage');
+        imgEl.src = imgUrl;
+        imgEl.style.visibility = 'visible';
+        let reveal = 100;
+        const revInterval = setInterval(() => {
+          reveal -= 2;
+          imgEl.style.clipPath = `inset(0 0 ${reveal}% 0)`;
+          if (reveal <= 0) {
+            clearInterval(revInterval);
+            showDetails(product, materials, price, wait);
+          }
+        }, 50);
+      }
 
-      const productImage = document.getElementById("productImage");
-      productImage.src = fields[1][0];
-      setTimeout(() => {
-        productImage.style.clipPath = "inset(0 0 0 0)";
-      }, 200);
+      function showDetails(product, materials, price, wait) {
+        const detailsEl = document.getElementById('productDetails');
+        detailsEl.style.visibility = 'visible';
+        detailsEl.innerHTML =
+          'Product: ' + product + '<br>' +
+          'Materials: ' + materials + '<br>' +
+          'Price: ' + price + '<br>' +
+          'Wait: ' + wait;
+        showJoinButton();
+      }
 
-      document.getElementById("product").textContent = `Product: ${fields[0][0]}`;
-      document.getElementById("materials").textContent = `Materials: ${fields[2][0]}`;
-      document.getElementById("price").textContent = `Price: ${fields[3][0]}`;
-      document.getElementById("wait").textContent = `Wait: ${fields[4][0]}`;
-    }
+      function showJoinButton() {
+        const btn = document.getElementById('joinBtn');
+        btn.style.visibility = 'visible';
+        let clickCount = 0;
+        btn.addEventListener('click', () => {
+          clickCount++;
+          if (clickCount === 1) {
+            btn.classList.add('absolute');
+            btn.style.top = '10%';
+            btn.style.left = '80%';
+          } else if (clickCount === 2) {
+            btn.style.top = '80%';
+            btn.style.left = '10%';
+          } else if (clickCount === 3) {
+            document.body.innerHTML = '';
+            setTimeout(lockedOut, 3000);
+          }
+        });
+      }
 
-    let moveCount = 0;
-    const btn = document.getElementById("waitlistBtn");
-    btn.addEventListener("click", () => {
-      moveCount++;
-      if (moveCount < 3) {
-        btn.style.top = `${Math.random() * 70 + 10}%`;
-        btn.style.left = `${Math.random() * 70 + 10}%`;
-        btn.style.position = "absolute";
-      } else {
-        document.body.innerHTML = "";
-        const lockoutDiv = document.getElementById("lockout");
-        document.body.appendChild(lockoutDiv);
-        lockoutDiv.style.display = "block";
-        let counter = 900;
+      function lockedOut() {
+        document.body.style.background = '#0000FF';
+        const el = document.createElement('div');
+        el.style.color = '#FFFFFF';
+        el.style.fontFamily = `'Akkurat','Swish School Sans',sans-serif`;
+        el.style.fontSize = '2rem';
+        el.style.textAlign = 'center';
+        el.style.padding = '2rem';
+        document.body.appendChild(el);
+
+        const text = 'You are locked out of waitlist for 900 seconds';
+        let i = 0;
+        function typeLock() {
+          if (i < text.length) {
+            el.textContent = text.slice(0, i + 1);
+            i++;
+            setTimeout(typeLock, 100);
+          } else {
+            startCountdown(el);
+          }
+        }
+        typeLock();
+      }
+
+      function startCountdown(el) {
+        let sec = 900;
         const interval = setInterval(() => {
-          lockoutDiv.textContent = `You are locked out of waitlist for ${counter} seconds.`;
-          counter--;
-          if (counter < 0) {
+          sec--;
+          el.textContent = `You are locked out of waitlist for ${sec} seconds`;
+          if (sec <= 0) {
             clearInterval(interval);
             location.reload();
           }
         }, 1000);
       }
     });
-
-    window.onload = typeText;
   </script>
 </body>
 </html>
