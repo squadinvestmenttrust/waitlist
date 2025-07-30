@@ -1,323 +1,227 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Waitlist</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Akkurat not available free: use Swis721 (very similar) as a web font fallback -->
-    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --main-bg: #000FF;
-            --main-text: #fff;
-            --accent: #fff;
-            --font-main: 'Work Sans', 'Swis721', Arial, sans-serif;
-            --img-transition: 0.3s cubic-bezier(.22,.61,.36,1);
-        }
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            background: var(--main-bg);
-            color: var(--main-text);
-            font-family: var(--font-main);
-            font-size: 18px;
-            overflow-x: hidden;
-        }
-        #main-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100vw;
-            min-height: 100vh;
-            padding-bottom: 48px;
-        }
-        #top-image-container {
-            position: relative;
-            width: 100vw;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 5;
-            transition: height 0.3s, transform 0.3s;
-        }
-        #top-image {
-            width: 300px;
-            max-width: 60vw;
-            height: auto;
-            display: block;
-            margin: 48px auto 16px auto;
-            transition: width 0.3s, height 0.3s, transform 0.3s;
-            box-shadow: 0 8px 30px rgba(0,0,0,.2);
-            border-radius: 12px;
-            background: #000;
-        }
-        .sticky {
-            position: fixed;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%) scale(0.3);
-            width: 120px !important;
-            z-index: 20;
-            margin: 0;
-        }
-        #dos-text {
-            font-family: 'Courier New', monospace;
-            font-size: 2rem;
-            margin-top: 36px;
-            margin-bottom: 28px;
-            letter-spacing: 2px;
-            background: none;
-            color: var(--main-text);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 2.8rem;
-            white-space: pre;
-        }
-        #product-image-container {
-            width: 320px;
-            max-width: 90vw;
-            min-height: 260px;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            position: relative;
-            margin: 0 auto;
-        }
-        #product-image {
-            width: 320px;
-            max-width: 90vw;
-            min-height: 240px;
-            background: #111;
-            object-fit: contain;
-            margin-bottom: 20px;
-            display: none;
-        }
-        #product-details {
-            text-align: center;
-            margin: 18px auto 32px auto;
-            font-size: 1.05em;
-            line-height: 1.5;
-            letter-spacing: 0.5px;
-        }
-        .label {
-            color: #aaf;
-            font-family: 'Courier New', monospace;
-            margin-right: 5px;
-        }
-        #waitlist-box {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 280px;
-            height: 54px;
-            border: 2px solid #fff;
-            border-radius: 12px;
-            margin: 28px auto 0 auto;
-            font-size: 1.4em;
-            font-weight: 700;
-            background: rgba(255,255,255,0.04);
-            color: #fff;
-            user-select: none;
-            cursor: pointer;
-            transition: box-shadow 0.2s, transform 0.3s;
-            position: relative;
-            z-index: 10;
-        }
-        #waitlist-box:active {
-            box-shadow: 0 0 0 3px #fffd, 0 8px 30px rgba(0,0,0,0.3);
-            transform: scale(0.97);
-        }
-        /* Hide everything if locked out */
-        .locked-out *:not(#lockout) {
-            display: none !important;
-        }
-        #lockout {
-            display: none;
-            font-family: 'Courier New', monospace;
-            color: #fff;
-            font-size: 2em;
-            margin-top: 120px;
-            text-align: center;
-            width: 100vw;
-        }
-        @media (max-width: 650px) {
-            #top-image { width: 200px; }
-            .sticky { width: 70px !important; }
-            #product-image, #product-image-container { width: 90vw; }
-            #waitlist-box { width: 90vw; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Waitlist</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #0000FF;
+      color: #FFFFFF;
+      font-family: 'Akkurat', 'Swish School Sans', sans-serif;
+      overflow-x: hidden;
+    }
+    #header {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    #header img {
+      max-width: 80vw;
+      height: auto;
+      transition: transform 0.3s ease;
+    }
+    #header.shrink img {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%) scale(0.2);
+      max-width: none;
+    }
+    #welcome {
+      display: none;
+      text-align: center;
+      font-size: 2rem;
+      margin: 2rem 0;
+    }
+    .dos-block {
+      display: inline-block;
+      width: 1rem;
+      height: 1rem;
+      background: #FFFFFF;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    #product-section {
+      display: none;
+      text-align: center;
+      margin: 2rem 0;
+    }
+    #product-image-container {
+      width: 80vw;
+      max-width: 600px;
+      overflow: hidden;
+      height: 0;
+      margin: 0 auto;
+    }
+    #product-image {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    #product-details {
+      display: none;
+      line-height: 1.5;
+      margin: 1rem auto;
+      text-align: center;
+    }
+    #waitlist-btn {
+      display: none;
+      padding: 1rem 2rem;
+      border: 2px solid #FFFFFF;
+      background: transparent;
+      color: #FFFFFF;
+      cursor: pointer;
+      position: relative;
+      font-size: 1rem;
+    }
+  </style>
 </head>
 <body>
-    <div id="main-container">
-        <div id="top-image-container">
-            <img id="top-image" src="https://i.ibb.co/DP0MHnjM/IMG-6365.jpg" alt="Waitlist Banner">
-        </div>
-        <div id="dos-text"></div>
-        <div id="product-image-container">
-            <canvas id="product-canvas"></canvas>
-            <img id="product-image" src="" alt="Product" />
-        </div>
-        <div id="product-details"></div>
-        <div id="waitlist-box">join the waitlist.</div>
+  <div id="header">
+    <img id="header-image" src="https://i.ibb.co/DP0MHnjM/IMG-6365.jpg" alt="Header">
+  </div>
+  <div id="welcome">
+    <span class="dos-block"></span><span id="welcome-text"></span>
+  </div>
+  <div id="product-section">
+    <div id="product-image-container">
+      <img id="product-image" src="" alt="Product">
     </div>
-    <div id="lockout"></div>
-    <script>
-        // Smooth shrink and sticky effect for top image
-        const topImage = document.getElementById('top-image');
-        const topImageContainer = document.getElementById('top-image-container');
-        let stickyApplied = false;
-        window.addEventListener('scroll', function() {
-            const scY = window.scrollY || document.documentElement.scrollTop;
-            if(scY > 120 && !stickyApplied) {
-                topImage.classList.add('sticky');
-                stickyApplied = true;
-            } else if(scY <= 120 && stickyApplied) {
-                topImage.classList.remove('sticky');
-                stickyApplied = false;
-            }
-        });
+    <div id="product-details"></div>
+  </div>
+  <button id="waitlist-btn">join the waitlist</button>
 
-        // DOS text animation
-        function typeText(element, text, block='█', speed=55, callback) {
-            let i = 0;
-            function type() {
-                element.textContent = block + ' ' + text.slice(0, i);
-                if(i < text.length) {
-                    i++;
-                    setTimeout(type, speed);
-                } else if(callback) {
-                    callback();
-                }
-            }
-            type();
-        }
+  <script>
+    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6aU1_jB0juldfdNBs-KX3XLLqOuAoZDNpg_znvr_x1ToUAariHKo2Gz-REVye58V_nenvXETUOTZk/pub?output=csv';
+    let csvData = {};
 
-        // Fetch CSV from Google Sheets, return array of values from B1-B5
-        async function getSheetData() {
-            const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6aU1_jB0juldfdNBs-KX3XLLqOuAoZDNpg_znvr_x1ToUAariHKo2Gz-REVye58V_nenvXETUOTZk/pub?output=csv';
-            const resp = await fetch(url);
-            const txt = await resp.text();
-            const rows = txt.trim().split('\n').map(row=>row.split(','));
-            // B1: rows[0][1], B2: rows[1][1], B3: rows[2][1], etc
-            return [rows[0][1], rows[1][1], rows[2][1], rows[3][1], rows[4][1]];
-        }
+    fetch(csvUrl)
+      .then(r => r.text())
+      .then(text => {
+        const rows = text.trim().split('\n').map(line => line.split(','));
+        csvData.product    = rows[0][1] || '';
+        csvData.productImg = rows[1][1] || '';
+        csvData.materials  = rows[2][1] || '';
+        csvData.price      = rows[3][1] || '';
+        csvData.wait       = rows[4][1] || '';
+        initScroll();
+      })
+      .catch(console.error);
 
-        // Simulate slow, top-down image load via canvas
-        async function loadImageSlowly(imgUrl, canvasId, cb) {
-            const canvas = document.getElementById(canvasId);
-            const ctx = canvas.getContext('2d');
-            const img = new window.Image();
-            img.crossOrigin = "Anonymous";
-            img.src = imgUrl;
-            img.onload = function() {
-                const {width, height} = img;
-                canvas.width = width;
-                canvas.height = height;
-                canvas.style.width = '100%';
-                canvas.style.height = 'auto';
-                let y = 0;
-                const rowStep = Math.max(1, Math.round(height/40));
-                function drawRows() {
-                    if(y < height) {
-                        ctx.drawImage(img, 0, y, width, rowStep, 0, y, width, rowStep);
-                        y += rowStep;
-                        setTimeout(drawRows, 18 + Math.random()*18);
-                    } else {
-                        canvas.style.display = 'none';
-                        // Show img fallback for screen readers
-                        document.getElementById('product-image').src = imgUrl;
-                        document.getElementById('product-image').style.display = 'block';
-                        if(cb) cb();
-                    }
-                }
-                drawRows();
-            };
-        }
+    function initScroll() {
+      const header = document.getElementById('header');
+      const welcome = document.getElementById('welcome');
+      const welcomeText = document.getElementById('welcome-text');
+      let typed = false;
+      const msg = 'welcome to waitlist.';
 
-        // Main app logic
-        async function main() {
-            // Animate 'welcome to waitlist.'
-            await new Promise(resolve => typeText(document.getElementById('dos-text'), 'welcome to waitlist.', '█', 48, resolve));
-            // Load spreadsheet data
-            let [product, productImg, materials, price, wait] = await getSheetData();
-            // Animate slow-load image
-            const c = document.getElementById('product-canvas');
-            c.style.display = 'block';
-            document.getElementById('product-image').style.display = 'none';
-            await new Promise(resolve => loadImageSlowly(productImg, 'product-canvas', resolve));
-            // Show product details
-            const det = document.getElementById('product-details');
-            det.innerHTML = `
-                <span class="label">Product:</span>${product}<br>
-                <span class="label">Materials:</span>${materials}<br>
-                <span class="label">Price:</span>${price}<br>
-                <span class="label">Wait:</span>${wait}
-            `;
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > header.clientHeight * 0.5 && !typed) {
+          typed = true;
+          header.classList.add('shrink');
+          showWelcome();
         }
-        main();
+      });
 
-        // Waitlist box trick logic
-        const box = document.getElementById('waitlist-box');
-        let clicks = 0;
-        const positions = [
-            {top:'auto', left:'auto', right:'auto', bottom:'auto', transform:''},
-            {top:'85vh', left:'80vw', right:'auto', bottom:'auto', transform:'translate(-50%,-50%)'},
-            {top:'30vh', left:'15vw', right:'auto', bottom:'auto', transform:'rotate(-10deg)'},
-            {top:'auto', left:'70vw', bottom:'20vh', transform:'rotate(27deg)'},
-        ];
-        function moveBox(idx) {
-            box.style.position = 'fixed';
-            box.style.zIndex = '30';
-            const p = positions[idx];
-            box.style.top = p.top;
-            box.style.left = p.left;
-            box.style.right = p.right;
-            box.style.bottom = p.bottom;
-            box.style.transform = p.transform;
+      function showWelcome() {
+        welcome.style.display = 'block';
+        let i = 0;
+        function typeChar() {
+          if (i < msg.length) {
+            welcomeText.textContent += msg.charAt(i++);
+            setTimeout(typeChar, 100);
+          } else {
+            showProductSection();
+          }
         }
-        box.addEventListener('click', function() {
-            clicks++;
-            if(clicks <= 3) {
-                moveBox(clicks);
-            } else {
-                // Hide everything, show lockout screen after 2 seconds
-                document.body.classList.add('locked-out');
-                setTimeout(startLockout, 2000);
-            }
-        });
+        typeChar();
+      }
+    }
 
-        // Lockout logic
-        function startLockout() {
-            const lockout = document.getElementById('lockout');
-            lockout.style.display = 'block';
-            let seconds = 900;
-            function update() {
-                lockout.innerHTML = `You are locked out of waitlist for ${seconds} seconds`;
-                if(seconds > 0) {
-                    seconds--;
-                    setTimeout(update, 1000);
-                } else {
-                    lockout.innerHTML = 'Lockout ended. Reload the page to try again.';
-                }
-            }
-            // Type out first line, then start countdown
-            let intro = 'You are locked out of waitlist for ';
-            let i = 0;
-            function typeIntro() {
-                lockout.textContent = intro.slice(0, i);
-                if(i < intro.length) {
-                    i++;
-                    setTimeout(typeIntro, 36);
-                } else {
-                    lockout.textContent = intro + '900 seconds';
-                    update();
-                }
-            }
-            typeIntro();
+    function showProductSection() {
+      const sec = document.getElementById('product-section');
+      const imgCont = document.getElementById('product-image-container');
+      const prodImg = document.getElementById('product-image');
+      sec.style.display = 'block';
+      prodImg.src = csvData.productImg;
+
+      prodImg.onload = () => {
+        const fullH = prodImg.naturalHeight * (imgCont.clientWidth / prodImg.naturalWidth);
+        let h = 0, step = fullH / 50;
+        const timer = setInterval(() => {
+          h += step;
+          if (h >= fullH) {
+            clearInterval(timer);
+            imgCont.style.height = fullH + 'px';
+            showProductDetails();
+          } else {
+            imgCont.style.height = h + 'px';
+          }
+        }, 50);
+      };
+    }
+
+    function showProductDetails() {
+      const det = document.getElementById('product-details');
+      det.innerHTML = 
+        'Product: '   + csvData.product   + '<br>' +
+        'Materials: ' + csvData.materials + '<br>' +
+        'Price: '     + csvData.price     + '<br>' +
+        'Wait: '      + csvData.wait;
+      det.style.display = 'block';
+      showWaitlistButton();
+    }
+
+    function showWaitlistButton() {
+      const btn = document.getElementById('waitlist-btn');
+      btn.style.display = 'block';
+      let clicks = 0;
+
+      btn.addEventListener('click', () => {
+        clicks++;
+        if (clicks < 3) {
+          const x = Math.random() * (window.innerWidth - btn.offsetWidth);
+          const y = Math.random() * (window.innerHeight - btn.offsetHeight);
+          btn.style.position = 'absolute';
+          btn.style.left = x + 'px';
+          btn.style.top = y + 'px';
+        } else {
+          document.body.innerHTML = '';
+          setTimeout(() => lockOut(), 2000);
         }
-    </script>
+      });
+    }
+
+    function lockOut() {
+      const d = document.createElement('div');
+      Object.assign(d.style, {
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        fontSize: '2rem',
+        textAlign: 'center'
+      });
+      document.body.appendChild(d);
+
+      let sec = 900;
+      d.textContent = `You are locked out of waitlist for ${sec} seconds`;
+      const countdown = setInterval(() => {
+        sec--;
+        if (sec >= 0) {
+          d.textContent = `You are locked out of waitlist for ${sec} seconds`;
+        } else {
+          clearInterval(countdown);
+        }
+      }, 1000);
+    }
+  </script>
 </body>
 </html>
