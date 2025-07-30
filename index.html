@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Waitlist</title>
+  <style>
+    body {
+      background-color: #0000FF;
+      color: white;
+      font-family: 'Akkurat', 'Helvetica Neue', 'Arial', sans-serif;
+      margin: 0;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .dos-text {
+      font-family: monospace;
+      white-space: pre;
+      font-size: 1.2rem;
+      margin-top: 1rem;
+    }
+
+    .product-container {
+      margin-top: 2rem;
+      text-align: left;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .product-img {
+      width: 100%;
+      height: auto;
+      display: block;
+      margin: auto;
+      image-rendering: pixelated;
+    }
+
+    .waitlist-box {
+      border: 1px solid white;
+      padding: 1rem;
+      margin-top: 1rem;
+      text-align: center;
+      cursor: pointer;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <img src="https://i.ibb.co/DP0MHnjM/IMG-6365.jpg" alt="Intro" style="max-width: 300px; width: 100%;" />
+
+  <div class="dos-text" id="intro"></div>
+
+  <div id="product-section"></div>
+
+  <script>
+    // DOS-style typewriter effect
+    const introText = 'welcome to waitlist.';
+    const introDiv = document.getElementById('intro');
+    let i = 0;
+
+    function typeIntro() {
+      if (i <= introText.length) {
+        introDiv.textContent = '> ' + introText.slice(0, i);
+        i++;
+        setTimeout(typeIntro, 80);
+      } else {
+        loadProducts();
+      }
+    }
+
+    typeIntro();
+
+    async function loadProducts() {
+      const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6aU1_jB0juldfdNBs-KX3XLLqOuAoZDNpg_znvr_x1ToUAariHKo2Gz-REVye58V_nenvXETUOTZk/pub?output=csv';
+      const response = await fetch(csvUrl);
+      const text = await response.text();
+      const rows = text.trim().split('\n').map(row => row.split(','));
+
+      const productSection = document.getElementById('product-section');
+
+      for (let col = 1; col < rows[0].length; col++) {
+        const name = rows[0][col];
+        const imageUrl = rows[1][col];
+        const materials = rows[2][col];
+        const price = rows[3][col];
+        const wait = rows[4][col];
+
+        const container = document.createElement('div');
+        container.className = 'product-container';
+
+        const img = document.createElement('img');
+        img.className = 'product-img';
+        img.src = imageUrl;
+        img.loading = 'lazy';
+        container.appendChild(img);
+
+        const textDiv = document.createElement('div');
+        textDiv.innerHTML = `
+          <p><strong>Product:</strong> ${name}</p>
+          <p><strong>Materials:</strong> ${materials}</p>
+          <p><strong>Price:</strong> ${price}</p>
+          <p><strong>Wait:</strong> ${wait}</p>
+        `;
+        container.appendChild(textDiv);
+
+        const button = document.createElement('div');
+        button.className = 'waitlist-box';
+        button.textContent = 'join the waitlist.';
+        button.onclick = () => button.textContent = 'email wait@waitlist.com.au';
+        container.appendChild(button);
+
+        productSection.appendChild(container);
+      }
+    }
+  </script>
+</body>
+</html>
