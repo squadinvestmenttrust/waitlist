@@ -5,207 +5,169 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Waitlist</title>
     <style>
-        /* --- Global Styles & Layout --- */
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            overflow: hidden; /* Prevents scrollbars when the button moves */
-        }
-
+        /* General Body and Page Styling */
         body {
-            background-color: #000FFF; /* Blue background for DOS theme */
+            background-color: #000FFF;
             color: white;
-            font-family: 'akkurat'; /* Standard monospace font */
+            font-family: Helvetica, Arial, sans-serif;
+            margin: 0;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
+            min-height: 100vh;
+            overflow: hidden; /* Prevents scrollbars from the moving button */
+            position: relative; /* Establishes a positioning context for the button */
+        }
+
+        /* Container for the main content */
+        #mainContent {
             text-align: center;
         }
 
-        /* --- Content Containers --- */
-        #main-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        #lockout-content {
-            display: none; /* Initially hidden */
-        }
-
-        /* --- Page Elements --- */
-        #clock-image {
+        /* Clock Image Styling */
+        #clockImage {
             width: 200px;
-            margin-bottom: 25px;
-        }
-        
-        /* --- Typewriter Text Styling --- */
-        .typewriter-text {
-            font-size: 1.5em;
-            /* Reserve space to prevent page jumping as text appears */
-            min-height: 1.5em; 
-        }
-        
-        /* Blinking cursor effect for typewriter */
-        .typewriter-text::after {
-            content: '_';
-            opacity: 1;
-            animation: blink 1s infinite;
+            margin-bottom: 20px;
         }
 
-        @keyframes blink {
-            0%, 100% { 
-                opacity: 1; 
-            }
-            50% { 
-                opacity: 0; 
-            }
+        /* Typewriter Text Styling */
+        #welcomeText, #lockoutText {
+            font-size: 2em;
+            min-height: 1.2em; /* Reserves space to prevent page layout shifts */
+            font-weight: bold;
         }
-
-        /* --- Interactive Button --- */
-        #join-button {
-            background-color: 000FFF;
-            border: 2px solid white;
+        
+        /* "Join Waitlist" Button Styling */
+        #joinButton {
+            background-color: #000FFF;
             color: white;
-            padding: 12px 24px;
-            font-family: akkurat;
-            font-size: 1em;
+            border: 2px solid white;
+            padding: 15px 25px;
+            font-size: 1.2em;
+            font-family: Helvetica, Arial, sans-serif;
             cursor: pointer;
-            margin-top: 25px;
-            transition: all 0.2s ease;
-            display: none; /* Hidden until initial text types out */
+            transition: all 0.3s ease; /* Adds a smooth effect when moving */
+            display: none; /* Initially hidden until the welcome text finishes typing */
         }
 
-        #join-button:hover {
+        #joinButton:hover {
             background-color: white;
-            color: 000FFF;
+            color: #000FFF;
         }
 
+        /* Lockout Message Container Styling */
+        #lockoutContainer {
+            text-align: center;
+            display: none; /* Hidden until activated */
+        }
     </style>
 </head>
 <body>
 
-    <div id="main-content">
-        <img src="https://i.ibb.co/TqkgQZYM/clock.jpg" alt="Clock" id="clock-image">
-        <p id="welcome-text" class="typewriter-text"></p>
-        <button id="join-button">join waitlist</button>
+    <div id="mainContent">
+        <img id="clockImage" src="https://i.ibb.co/TqkgQZYM/clock.jpg" alt="Clock Image">
+        <p id="welcomeText"></p>
+        <button id="joinButton">join waitlist</button>
     </div>
 
-    <div id="lockout-content">
-        <p id="lockout-text" class="typewriter-text"></p>
+    <div id="lockoutContainer">
+        <p id="lockoutText"></p>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
 
-            // --- DOM ELEMENTS ---
-            const mainContent = document.getElementById('main-content');
-            const welcomeTextEl = document.getElementById('welcome-text');
-            const joinButton = document.getElementById('join-button');
-            const lockoutContent = document.getElementById('lockout-content');
-            const lockoutTextEl = document.getElementById('lockout-text');
+            // --- Get HTML Elements ---
+            const mainContent = document.getElementById('mainContent');
+            const welcomeTextEl = document.getElementById('welcomeText');
+            const joinButton = document.getElementById('joinButton');
+            const lockoutContainer = document.getElementById('lockoutContainer');
+            const lockoutTextEl = document.getElementById('lockoutText');
 
-            // --- STATE ---
-            let clickCount = 0;
+            // --- State Variables ---
+            let buttonClickCount = 0;
+            const LOCKOUT_SECONDS = 900;
 
             /**
-             * Creates a typewriter effect for a given text on an element.
-             * @param {HTMLElement} element - The HTML element to display the text in.
-             * @param {string} text - The text to type out.
-             * @param {number} [speed=100] - The typing speed in milliseconds.
-             * @param {function} [onComplete=()=>{}] - A callback function to run when typing is done.
+             * Animates text with a typewriter effect.
+             * @param {HTMLElement} element The HTML element to type into.
+             * @param {string} text The string to be typed.
+             * @param {function} [callback] An optional function to run after typing is complete.
              */
-            function typewriter(element, text, speed = 100, onComplete = () => {}) {
-                element.innerHTML = ''; 
+            function typeWriter(element, text, callback) {
                 let i = 0;
-                const interval = setInterval(() => {
+                element.innerHTML = ''; // Clear the element first
+                function type() {
                     if (i < text.length) {
                         element.innerHTML += text.charAt(i);
                         i++;
-                    } else {
-                        clearInterval(interval);
-                        // Hide cursor after typing is complete
-                        element.classList.remove('typewriter-text');
-                        element.style.borderRight = 'none';
-                        onComplete();
+                        setTimeout(type, 90); // Typing speed in milliseconds
+                    } else if (callback) {
+                        callback();
                     }
-                }, speed);
-            }
-
-            /**
-             * Starts the countdown timer and updates the lockout message.
-             * @param {number} seconds - The number of seconds to count down from.
-             */
-            function startCountdown(seconds) {
-                let timer = seconds;
-                const baseText = 'You are locked out of waitlist for ';
-                
-                const countdownInterval = setInterval(() => {
-                    // Directly update the text without the typewriter effect
-                    lockoutTextEl.innerHTML = `${baseText}${timer} seconds`;
-                    timer--;
-
-                    if (timer < 0) {
-                        clearInterval(countdownInterval);
-                        location.reload(); // Refresh the page when the timer hits 0
-                    }
-                }, 1000);
+                }
+                type();
             }
 
             /**
              * Moves the "join waitlist" button to a random position on the screen.
              */
             function moveButton() {
-                // Change button to absolute positioning to allow it to move freely
-                if (clickCount === 1) {
-                    joinButton.style.position = 'absolute';
-                }
-            
+                joinButton.style.position = 'absolute';
                 const vw = window.innerWidth;
                 const vh = window.innerHeight;
                 const buttonWidth = joinButton.offsetWidth;
                 const buttonHeight = joinButton.offsetHeight;
 
-                // Calculate a random top/left position within the viewport
-                const newX = Math.floor(Math.random() * (vw - buttonWidth));
-                const newY = Math.floor(Math.random() * (vh - buttonHeight));
+                const top = Math.random() * (vh - buttonHeight);
+                const left = Math.random() * (vw - buttonWidth);
 
-                joinButton.style.left = `${newX}px`;
-                joinButton.style.top = `${newY}px`;
+                joinButton.style.top = `${top}px`;
+                joinButton.style.left = `${left}px`;
             }
 
-            // --- EVENT LISTENER FOR THE BUTTON ---
-            joinButton.addEventListener('click', () => {
-                clickCount++;
+            /**
+             * Initiates the lockout sequence and countdown.
+             */
+            function startLockout() {
+                let timer = LOCKOUT_SECONDS;
+                const staticText = 'You are locked out of waitlist for ';
                 
-                switch (clickCount) {
-                    case 1: // First click
-                    case 2: // Second click
-                        moveButton();
-                        break;
-                    case 3: // Third click
-                        // Hide the initial content
-                        mainContent.style.display = 'none';
-                        
-                        // Show the lockout message container
-                        lockoutContent.style.display = 'block';
-                        
-                        // Start the final lockout sequence
-                        const lockoutMessage = 'You are locked out of waitlist for 900 seconds';
-                        typewriter(lockoutTextEl, lockoutMessage, 75, () => {
-                            // After the message types out, start the countdown
-                            startCountdown(900);
-                        });
-                        break;
+                // Type out the static part of the lockout message
+                typeWriter(lockoutTextEl, staticText, () => {
+                    // Create a span to hold the updating timer
+                    const timerSpan = document.createElement('span');
+                    lockoutTextEl.appendChild(timerSpan);
+                    
+                    // Start the countdown interval
+                    const countdownInterval = setInterval(() => {
+                        timerSpan.textContent = `${timer} seconds`;
+                        if (timer <= 0) {
+                            clearInterval(countdownInterval);
+                            location.reload(); // Refresh the page when the timer hits 0
+                        }
+                        timer--;
+                    }, 1000);
+                });
+            }
+
+            // --- Event Listener for the Button ---
+            joinButton.addEventListener('click', () => {
+                buttonClickCount++;
+                if (buttonClickCount < 3) {
+                    moveButton();
+                } else {
+                    // On the third click, hide main content and start the lockout
+                    mainContent.style.display = 'none';
+                    lockoutContainer.style.display = 'block';
+                    startLockout();
                 }
             });
 
-            // --- INITIALIZE THE PAGE ---
-            const welcomeMessage = 'welcome to waitlist.';
-            typewriter(welcomeTextEl, welcomeMessage, 150, () => {
-                // Show the button only after the welcome message has finished typing
+            // --- Initial Page Load Action ---
+            // Start the welcome message typewriter effect as soon as the page loads.
+            typeWriter(welcomeTextEl, 'welcome to waitlist.', () => {
+                // When the welcome message is finished, show the "join waitlist" button.
                 joinButton.style.display = 'inline-block';
             });
         });
