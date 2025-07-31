@@ -1,227 +1,215 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Waitlist</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: #0000FF;
-      color: #FFFFFF;
-      font-family: 'Akkurat', 'Swish School Sans', sans-serif;
-      overflow-x: hidden;
-    }
-    #header {
-      position: relative;
-      width: 100%;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-    #header img {
-      max-width: 80vw;
-      height: auto;
-      transition: transform 0.3s ease;
-    }
-    #header.shrink img {
-      position: fixed;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%) scale(0.2);
-      max-width: none;
-    }
-    #welcome {
-      display: none;
-      text-align: center;
-      font-size: 2rem;
-      margin: 2rem 0;
-    }
-    .dos-block {
-      display: inline-block;
-      width: 1rem;
-      height: 1rem;
-      background: #FFFFFF;
-      vertical-align: middle;
-      margin-right: 0.5rem;
-    }
-    #product-section {
-      display: none;
-      text-align: center;
-      margin: 2rem 0;
-    }
-    #product-image-container {
-      width: 80vw;
-      max-width: 600px;
-      overflow: hidden;
-      height: 0;
-      margin: 0 auto;
-    }
-    #product-image {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
-    #product-details {
-      display: none;
-      line-height: 1.5;
-      margin: 1rem auto;
-      text-align: center;
-    }
-    #waitlist-btn {
-      display: none;
-      padding: 1rem 2rem;
-      border: 2px solid #FFFFFF;
-      background: transparent;
-      color: #FFFFFF;
-      cursor: pointer;
-      position: relative;
-      font-size: 1rem;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waitlist</title>
+    <style>
+        /* --- Global Styles & Layout --- */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevents scrollbars when the button moves */
+        }
+
+        body {
+            background-color: #000000; /* Black background for DOS theme */
+            color: white;
+            font-family: 'Courier New', Courier, monospace; /* Standard monospace font */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        /* --- Content Containers --- */
+        #main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #lockout-content {
+            display: none; /* Initially hidden */
+        }
+
+        /* --- Page Elements --- */
+        #clock-image {
+            width: 200px;
+            margin-bottom: 25px;
+        }
+        
+        /* --- Typewriter Text Styling --- */
+        .typewriter-text {
+            font-size: 1.5em;
+            /* Reserve space to prevent page jumping as text appears */
+            min-height: 1.5em; 
+        }
+        
+        /* Blinking cursor effect for typewriter */
+        .typewriter-text::after {
+            content: '_';
+            opacity: 1;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { 
+                opacity: 1; 
+            }
+            50% { 
+                opacity: 0; 
+            }
+        }
+
+        /* --- Interactive Button --- */
+        #join-button {
+            background-color: transparent;
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            font-family: inherit;
+            font-size: 1em;
+            cursor: pointer;
+            margin-top: 25px;
+            transition: all 0.2s ease;
+            display: none; /* Hidden until initial text types out */
+        }
+
+        #join-button:hover {
+            background-color: white;
+            color: black;
+        }
+
+    </style>
 </head>
 <body>
-  <div id="header">
-    <img id="header-image" src="https://i.ibb.co/DP0MHnjM/IMG-6365.jpg" alt="Header">
-  </div>
-  <div id="welcome">
-    <span class="dos-block"></span><span id="welcome-text"></span>
-  </div>
-  <div id="product-section">
-    <div id="product-image-container">
-      <img id="product-image" src="" alt="Product">
+
+    <div id="main-content">
+        <img src="https://i.ibb.co/TqkgQZYM/clock.jpg" alt="Clock" id="clock-image">
+        <p id="welcome-text" class="typewriter-text"></p>
+        <button id="join-button">join waitlist</button>
     </div>
-    <div id="product-details"></div>
-  </div>
-  <button id="waitlist-btn">join the waitlist</button>
 
-  <script>
-    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6aU1_jB0juldfdNBs-KX3XLLqOuAoZDNpg_znvr_x1ToUAariHKo2Gz-REVye58V_nenvXETUOTZk/pub?output=csv';
-    let csvData = {};
+    <div id="lockout-content">
+        <p id="lockout-text" class="typewriter-text"></p>
+    </div>
 
-    fetch(csvUrl)
-      .then(r => r.text())
-      .then(text => {
-        const rows = text.trim().split('\n').map(line => line.split(','));
-        csvData.product    = rows[0][1] || '';
-        csvData.productImg = rows[1][1] || '';
-        csvData.materials  = rows[2][1] || '';
-        csvData.price      = rows[3][1] || '';
-        csvData.wait       = rows[4][1] || '';
-        initScroll();
-      })
-      .catch(console.error);
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
 
-    function initScroll() {
-      const header = document.getElementById('header');
-      const welcome = document.getElementById('welcome');
-      const welcomeText = document.getElementById('welcome-text');
-      let typed = false;
-      const msg = 'welcome to waitlist.';
+            // --- DOM ELEMENTS ---
+            const mainContent = document.getElementById('main-content');
+            const welcomeTextEl = document.getElementById('welcome-text');
+            const joinButton = document.getElementById('join-button');
+            const lockoutContent = document.getElementById('lockout-content');
+            const lockoutTextEl = document.getElementById('lockout-text');
 
-      window.addEventListener('scroll', () => {
-        if (window.scrollY > header.clientHeight * 0.5 && !typed) {
-          typed = true;
-          header.classList.add('shrink');
-          showWelcome();
-        }
-      });
+            // --- STATE ---
+            let clickCount = 0;
 
-      function showWelcome() {
-        welcome.style.display = 'block';
-        let i = 0;
-        function typeChar() {
-          if (i < msg.length) {
-            welcomeText.textContent += msg.charAt(i++);
-            setTimeout(typeChar, 100);
-          } else {
-            showProductSection();
-          }
-        }
-        typeChar();
-      }
-    }
+            /**
+             * Creates a typewriter effect for a given text on an element.
+             * @param {HTMLElement} element - The HTML element to display the text in.
+             * @param {string} text - The text to type out.
+             * @param {number} [speed=100] - The typing speed in milliseconds.
+             * @param {function} [onComplete=()=>{}] - A callback function to run when typing is done.
+             */
+            function typewriter(element, text, speed = 100, onComplete = () => {}) {
+                element.innerHTML = ''; 
+                let i = 0;
+                const interval = setInterval(() => {
+                    if (i < text.length) {
+                        element.innerHTML += text.charAt(i);
+                        i++;
+                    } else {
+                        clearInterval(interval);
+                        // Hide cursor after typing is complete
+                        element.classList.remove('typewriter-text');
+                        element.style.borderRight = 'none';
+                        onComplete();
+                    }
+                }, speed);
+            }
 
-    function showProductSection() {
-      const sec = document.getElementById('product-section');
-      const imgCont = document.getElementById('product-image-container');
-      const prodImg = document.getElementById('product-image');
-      sec.style.display = 'block';
-      prodImg.src = csvData.productImg;
+            /**
+             * Starts the countdown timer and updates the lockout message.
+             * @param {number} seconds - The number of seconds to count down from.
+             */
+            function startCountdown(seconds) {
+                let timer = seconds;
+                const baseText = 'You are locked out of waitlist for ';
+                
+                const countdownInterval = setInterval(() => {
+                    // Directly update the text without the typewriter effect
+                    lockoutTextEl.innerHTML = `${baseText}${timer} seconds`;
+                    timer--;
 
-      prodImg.onload = () => {
-        const fullH = prodImg.naturalHeight * (imgCont.clientWidth / prodImg.naturalWidth);
-        let h = 0, step = fullH / 50;
-        const timer = setInterval(() => {
-          h += step;
-          if (h >= fullH) {
-            clearInterval(timer);
-            imgCont.style.height = fullH + 'px';
-            showProductDetails();
-          } else {
-            imgCont.style.height = h + 'px';
-          }
-        }, 50);
-      };
-    }
+                    if (timer < 0) {
+                        clearInterval(countdownInterval);
+                        location.reload(); // Refresh the page when the timer hits 0
+                    }
+                }, 1000);
+            }
 
-    function showProductDetails() {
-      const det = document.getElementById('product-details');
-      det.innerHTML = 
-        'Product: '   + csvData.product   + '<br>' +
-        'Materials: ' + csvData.materials + '<br>' +
-        'Price: '     + csvData.price     + '<br>' +
-        'Wait: '      + csvData.wait;
-      det.style.display = 'block';
-      showWaitlistButton();
-    }
+            /**
+             * Moves the "join waitlist" button to a random position on the screen.
+             */
+            function moveButton() {
+                // Change button to absolute positioning to allow it to move freely
+                if (clickCount === 1) {
+                    joinButton.style.position = 'absolute';
+                }
+            
+                const vw = window.innerWidth;
+                const vh = window.innerHeight;
+                const buttonWidth = joinButton.offsetWidth;
+                const buttonHeight = joinButton.offsetHeight;
 
-    function showWaitlistButton() {
-      const btn = document.getElementById('waitlist-btn');
-      btn.style.display = 'block';
-      let clicks = 0;
+                // Calculate a random top/left position within the viewport
+                const newX = Math.floor(Math.random() * (vw - buttonWidth));
+                const newY = Math.floor(Math.random() * (vh - buttonHeight));
 
-      btn.addEventListener('click', () => {
-        clicks++;
-        if (clicks < 3) {
-          const x = Math.random() * (window.innerWidth - btn.offsetWidth);
-          const y = Math.random() * (window.innerHeight - btn.offsetHeight);
-          btn.style.position = 'absolute';
-          btn.style.left = x + 'px';
-          btn.style.top = y + 'px';
-        } else {
-          document.body.innerHTML = '';
-          setTimeout(() => lockOut(), 2000);
-        }
-      });
-    }
+                joinButton.style.left = `${newX}px`;
+                joinButton.style.top = `${newY}px`;
+            }
 
-    function lockOut() {
-      const d = document.createElement('div');
-      Object.assign(d.style, {
-        position: 'fixed',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        fontSize: '2rem',
-        textAlign: 'center'
-      });
-      document.body.appendChild(d);
+            // --- EVENT LISTENER FOR THE BUTTON ---
+            joinButton.addEventListener('click', () => {
+                clickCount++;
+                
+                switch (clickCount) {
+                    case 1: // First click
+                    case 2: // Second click
+                        moveButton();
+                        break;
+                    case 3: // Third click
+                        // Hide the initial content
+                        mainContent.style.display = 'none';
+                        
+                        // Show the lockout message container
+                        lockoutContent.style.display = 'block';
+                        
+                        // Start the final lockout sequence
+                        const lockoutMessage = 'You are locked out of waitlist for 900 seconds';
+                        typewriter(lockoutTextEl, lockoutMessage, 75, () => {
+                            // After the message types out, start the countdown
+                            startCountdown(900);
+                        });
+                        break;
+                }
+            });
 
-      let sec = 900;
-      d.textContent = `You are locked out of waitlist for ${sec} seconds`;
-      const countdown = setInterval(() => {
-        sec--;
-        if (sec >= 0) {
-          d.textContent = `You are locked out of waitlist for ${sec} seconds`;
-        } else {
-          clearInterval(countdown);
-        }
-      }, 1000);
-    }
-  </script>
+            // --- INITIALIZE THE PAGE ---
+            const welcomeMessage = 'welcome to waitlist.';
+            typewriter(welcomeTextEl, welcomeMessage, 150, () => {
+                // Show the button only after the welcome message has finished typing
+                joinButton.style.display = 'inline-block';
+            });
+        });
+    </script>
+
 </body>
 </html>
