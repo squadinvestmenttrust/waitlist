@@ -1,177 +1,416 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Waitlist</title>
-    <style>
-        /* General Body and Page Styling */
-        body {
-            background-color: #000FFF;
-            color: white;
-            font-family: Helvetica, Arial, sans-serif;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow: hidden; /* Prevents scrollbars from the moving button */
-            position: relative; /* Establishes a positioning context for the button */
-        }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Waitlist</title>
+  <!-- Font: Akkurat-like. Using Inter as a close, clean Swiss-style sans. -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet" />
+  <style>
+    /* Color per spec. Assuming #0000FF (six digits). If you truly meant #000FF, update below. */
+    :root {
+      --bg: #0000FF;
+      --fg: #ffffff;
+    }
 
-        /* Container for the main content */
-        #mainContent {
-            text-align: center;
-        }
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: "Akkurat", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      letter-spacing: 0.2px;
+    }
 
-        /* Clock Image Styling */
-        #clockImage {
-            width: 200px;
-            margin-bottom: 20px;
-        }
+    a { color: var(--fg); }
 
-        /* Typewriter Text Styling */
-        #welcomeText, #lockoutText {
-            font-size: 2em;
-            min-height: 1.2em; /* Reserves space to prevent page layout shifts */
-            font-weight: bold;
-        }
-        
-        /* "Join Waitlist" Button Styling */
-        #joinButton {
-            background-color: #000FFF;
-            color: white;
-            border: 2px solid white;
-            padding: 15px 25px;
-            font-size: 1.2em;
-            font-family: Helvetica, Arial, sans-serif;
-            cursor: pointer;
-            transition: all 0.3s ease; /* Adds a smooth effect when moving */
-            display: none; /* Initially hidden until the welcome text finishes typing */
-        }
+    .container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
-        #joinButton:hover {
-            background-color: white;
-            color: #000FFF;
-        }
+    /* Hero image that shrinks on scroll and sticks to the top */
+    .hero-wrap {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: min(60vh, 60vw);
+      transition: transform 0.1s linear;
+      will-change: transform;
+      padding: 12px 0;
+      background: var(--bg);
+    }
 
-        /* Lockout Message Container Styling */
-        #lockoutContainer {
-            text-align: center;
-            display: none; /* Hidden until activated */
-        }
-    </style>
+    .hero-img {
+      max-width: min(80vw, 900px);
+      width: 80vw;
+      height: auto;
+      display: block;
+      filter: saturate(1.05);
+      border-radius: 8px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.25);
+    }
+
+    .spacer {
+      height: 75vh; /* space to allow scroll so shrink is visible */
+    }
+
+    /* Centered stage for the content below hero */
+    .stage {
+      width: min(1000px, 92vw);
+      margin: 0 auto 120px auto;
+      text-align: center;
+    }
+
+    /* DOS-style typewriter line */
+    .type-line {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: clamp(18px, 2.4vw, 28px);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin: 40px auto 28px auto;
+      white-space: pre-wrap;
+    }
+    .prompt {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      margin-right: 10px;
+      background: var(--fg);
+      box-shadow: 0 0 0 2px var(--bg) inset;
+    }
+    .cursor {
+      display: inline-block;
+      width: 8px;
+      height: 1.1em;
+      background: var(--fg);
+      margin-left: 6px;
+      animation: blink 1s step-end infinite;
+      vertical-align: -2px;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* Progressive image reveal container */
+    .progressive-wrap {
+      position: relative;
+      width: min(86vw, 900px);
+      margin: 28px auto 10px auto;
+      overflow: hidden; /* we will animate height to reveal top-down */
+      border-radius: 8px;
+      box-shadow: 0 10px 32px rgba(0,0,0,0.28);
+      background: rgba(255,255,255,0.05);
+    }
+    .progressive-img {
+      width: 100%;
+      height: auto;
+      display: block;
+      user-select: none;
+      -webkit-user-drag: none;
+      image-rendering: crisp-edges;
+      image-rendering: -webkit-optimize-contrast;
+    }
+
+    .meta {
+      font-size: clamp(14px, 1.8vw, 18px);
+      line-height: 1.6;
+      margin-top: 16px;
+    }
+    .meta .row { opacity: 0; transform: translateY(6px); transition: opacity 300ms ease, transform 300ms ease; }
+    .meta .row.show { opacity: 1; transform: translateY(0); }
+
+    /* The mischievous button */
+    .waitlist-btn {
+      display: inline-block;
+      padding: 14px 18px;
+      border: 2px solid var(--fg);
+      border-radius: 8px;
+      font-weight: 600;
+      margin: 30px auto 0 auto;
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      transition: transform 120ms ease;
+    }
+
+    .playfield {
+      position: relative;
+      width: 100%;
+      height: 50vh;
+      margin-top: 28px;
+    }
+    .runaway {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    /* Fullscreen blackout for the lockout */
+    .blackout {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      color: var(--fg);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      text-align: center;
+      padding: 24px;
+    }
+
+    .lockline { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: clamp(18px, 3.2vw, 34px); }
+
+    /* Utility hidden */
+    .hidden { display: none; }
+  </style>
 </head>
 <body>
-
-    <div id="mainContent">
-        <img id="clockImage" src="https://i.ibb.co/TqkgQZYM/clock.jpg" alt="Clock Image">
-        <p id="welcomeText"></p>
-        <button id="joinButton">join waitlist</button>
+  <div class="container">
+    <!-- Sticky hero that shrinks on scroll -->
+    <div class="hero-wrap" id="heroWrap">
+      <img class="hero-img" id="heroImg" alt="Hero" src="https://i.ibb.co/DP0MHnjM/IMG-6365.jpg" />
     </div>
 
-    <div id="lockoutContainer">
-        <p id="lockoutText"></p>
-    </div>
+    <div class="spacer" aria-hidden="true"></div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
+    <main class="stage" id="stage">
+      <!-- Typewriter greeting -->
+      <div class="type-line" id="greeting">
+        <span class="prompt"></span><span id="typeTarget"></span><span class="cursor"></span>
+      </div>
 
-            // --- Get HTML Elements ---
-            const mainContent = document.getElementById('mainContent');
-            const welcomeTextEl = document.getElementById('welcomeText');
-            const joinButton = document.getElementById('joinButton');
-            const lockoutContainer = document.getElementById('lockoutContainer');
-            const lockoutTextEl = document.getElementById('lockoutText');
+      <!-- Progressive product image reveal -->
+      <div class="progressive-wrap" id="progWrap" style="height:0">
+        <img class="progressive-img" id="prodImg" alt="Product" />
+      </div>
 
-            // --- State Variables ---
-            let buttonClickCount = 0;
-            const LOCKOUT_SECONDS = 900;
+      <!-- Meta text from sheet -->
+      <div class="meta" id="meta"></div>
 
-            /**
-             * Animates text with a typewriter effect.
-             * @param {HTMLElement} element The HTML element to type into.
-             * @param {string} text The string to be typed.
-             * @param {function} [callback] An optional function to run after typing is complete.
-             */
-            function typeWriter(element, text, callback) {
-                let i = 0;
-                element.innerHTML = ''; // Clear the element first
-                function type() {
-                    if (i < text.length) {
-                        element.innerHTML += text.charAt(i);
-                        i++;
-                        setTimeout(type, 90); // Typing speed in milliseconds
-                    } else if (callback) {
-                        callback();
-                    }
-                }
-                type();
+      <!-- Runaway button playground -->
+      <div class="playfield" id="playfield">
+        <div class="waitlist-btn runaway" id="runBtn" role="button" tabindex="0">join the waitlist.</div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Blackout overlay for lockout -->
+  <div class="blackout" id="blackout">
+    <div class="type-line lockline"><span class="prompt"></span><span id="lockMsg"></span><span class="cursor"></span></div>
+  </div>
+
+  <script>
+    // Config
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6aU1_jB0juldfdNBs-KX3XLLqOuAoZDNpg_znvr_x1ToUAariHKo2Gz-REVye58V_nenvXETUOTZk/pub?output=csv';
+
+    // Shrink-on-scroll behavior for hero
+    (function heroShrink(){
+      const wrap = document.getElementById('heroWrap');
+      const baseScale = 1;
+      const minScale = 0.33;
+      const range = 400; // px of scroll for full shrink
+      const onScroll = () => {
+        const y = window.scrollY;
+        const t = Math.min(Math.max(y / range, 0), 1);
+        const s = baseScale - (baseScale - minScale) * t;
+        wrap.style.transform = `scale(${s})`;
+      };
+      document.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    })();
+
+    // Typewriter util
+    function typeText(el, text, speed = 40) {
+      return new Promise(resolve => {
+        el.textContent = '';
+        let i = 0;
+        const tick = () => {
+          el.textContent += text.charAt(i);
+          i++;
+          if (i < text.length) setTimeout(tick, speed);
+          else resolve();
+        };
+        setTimeout(tick, speed);
+      });
+    }
+
+    // Intersection observer to trigger greeting typing when in view
+    const typeTarget = document.getElementById('typeTarget');
+    const greetObserver = new IntersectionObserver(entries => {
+      entries.forEach(async e => {
+        if (e.isIntersecting) {
+          greetObserver.disconnect();
+          await typeText(typeTarget, 'welcome to waitlist.', 45);
+        }
+      });
+    }, { threshold: 0.4 });
+    greetObserver.observe(document.getElementById('greeting'));
+
+    // Minimal CSV parser for simple rows
+    function parseCSV(text) {
+      const rows = [];
+      let row = [], field = '', inQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i], n = text[i+1];
+        if (c === '"') {
+          if (inQuotes && n === '"') { field += '"'; i++; }
+          else inQuotes = !inQuotes;
+        } else if (c === ',' && !inQuotes) {
+          row.push(field); field = '';
+        } else if ((c === '\n' || c === '\r') && !inQuotes) {
+          if (field !== '' || row.length) { row.push(field); field = ''; rows.push(row); row = []; }
+          if (c === '\r' && n === '\n') i++; // handle CRLF
+        } else {
+          field += c;
+        }
+      }
+      if (field !== '' || row.length) { row.push(field); rows.push(row); }
+      return rows;
+    }
+
+    // Load spreadsheet values B1..B5
+    async function loadSheet() {
+      const res = await fetch(CSV_URL, { cache: 'no-store' });
+      const text = await res.text();
+      const rows = parseCSV(text);
+      // Defensive: support sparse rows. We need the second column of first 5 rows.
+      const B = i => (rows[i] && rows[i][1]) ? rows[i][1].trim() : '';
+      return {
+        product: B(0),      // B1
+        imageUrl: B(1),     // B2
+        materials: B(2),    // B3
+        price: B(3),        // B4
+        wait: B(4)          // B5
+      };
+    }
+
+    // Progressive top-down image reveal
+    async function revealImage(imgEl, wrapEl, src) {
+      return new Promise((resolve, reject) => {
+        imgEl.onload = () => {
+          const natRatio = imgEl.naturalHeight / imgEl.naturalWidth;
+          // Wrap has fixed width via CSS; compute target height
+          const targetWidth = wrapEl.clientWidth || imgEl.naturalWidth;
+          const targetHeight = Math.round(targetWidth * natRatio);
+          const durationMs = 3000; // total reveal time
+          const fps = 60;
+          const steps = Math.round((durationMs/1000) * fps);
+          let h = 0;
+          const dh = targetHeight / steps;
+          wrapEl.style.height = '0px';
+          const timer = setInterval(() => {
+            h += dh;
+            if (h >= targetHeight) {
+              h = targetHeight;
+              clearInterval(timer);
+              wrapEl.style.height = h + 'px';
+              resolve();
+            } else {
+              wrapEl.style.height = h + 'px';
             }
+          }, 1000/fps);
+        };
+        imgEl.onerror = reject;
+        imgEl.src = src;
+      });
+    }
 
-            /**
-             * Moves the "join waitlist" button to a random position on the screen.
-             */
-            function moveButton() {
-                joinButton.style.position = 'absolute';
-                const vw = window.innerWidth;
-                const vh = window.innerHeight;
-                const buttonWidth = joinButton.offsetWidth;
-                const buttonHeight = joinButton.offsetHeight;
+    // Populate metadata lines with small reveal
+    function populateMeta(meta, data) {
+      meta.innerHTML = '';
+      const rows = [
+        ['Product', data.product],
+        ['Materials', data.materials],
+        ['Price', data.price],
+        ['Wait', data.wait]
+      ];
+      rows.forEach(([k, v], i) => {
+        const div = document.createElement('div');
+        div.className = 'row';
+        div.textContent = `${k}: ${v}`;
+        meta.appendChild(div);
+        setTimeout(() => div.classList.add('show'), 150 * (i + 1));
+      });
+    }
 
-                const top = Math.random() * (vh - buttonHeight);
-                const left = Math.random() * (vw - buttonWidth);
+    // Runaway button logic
+    (function runawayButton(){
+      const btn = document.getElementById('runBtn');
+      const field = document.getElementById('playfield');
+      let clicks = 0;
+      function relocate() {
+        const margin = 80; // keep inside bounds
+        const fw = field.clientWidth, fh = field.clientHeight;
+        const bw = btn.offsetWidth, bh = btn.offsetHeight;
+        let x = Math.random() * (fw - bw - margin*2) + margin;
+        let y = Math.random() * (fh - bh - margin*2) + margin;
+        btn.style.left = x + 'px';
+        btn.style.top = y + 'px';
+        btn.style.transform = 'translate(0,0)';
+      }
+      function handlePress() {
+        clicks++;
+        if (clicks < 3) {
+          relocate();
+        } else {
+          initiateLockout();
+        }
+      }
+      btn.addEventListener('click', handlePress);
+      btn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handlePress(); } });
+      window.addEventListener('resize', () => { /* keep it in view on resize */ relocate(); });
+    })();
 
-                joinButton.style.top = `${top}px`;
-                joinButton.style.left = `${left}px`;
-            }
+    // Lockout sequence
+    function initiateLockout() {
+      const blackout = document.getElementById('blackout');
+      const lockMsgEl = document.getElementById('lockMsg');
+      // Hide everything
+      document.querySelector('.container').style.display = 'none';
+      blackout.style.display = 'flex';
+      // Blank for 1 second
+      lockMsgEl.textContent = '';
+      setTimeout(() => {
+        const total = 900; // seconds
+        let remaining = total;
+        const render = () => {
+          lockMsgEl.textContent = `You are locked out of waitlist for ${remaining} seconds`;
+        };
+        render();
+        const iv = setInterval(() => {
+          remaining--;
+          render();
+          if (remaining <= 0) {
+            clearInterval(iv);
+            // After countdown, reload page state freshly
+            window.location.reload();
+          }
+        }, 1000);
+      }, 1000);
+    }
 
-            /**
-             * Initiates the lockout sequence and countdown.
-             */
-            function startLockout() {
-                let timer = LOCKOUT_SECONDS;
-                const staticText = 'You are locked out of waitlist for ';
-                
-                // Type out the static part of the lockout message
-                typeWriter(lockoutTextEl, staticText, () => {
-                    // Create a span to hold the updating timer
-                    const timerSpan = document.createElement('span');
-                    lockoutTextEl.appendChild(timerSpan);
-                    
-                    // Start the countdown interval
-                    const countdownInterval = setInterval(() => {
-                        timerSpan.textContent = `${timer} seconds`;
-                        if (timer <= 0) {
-                            clearInterval(countdownInterval);
-                            location.reload(); // Refresh the page when the timer hits 0
-                        }
-                        timer--;
-                    }, 1000);
-                });
-            }
-
-            // --- Event Listener for the Button ---
-            joinButton.addEventListener('click', () => {
-                buttonClickCount++;
-                if (buttonClickCount < 3) {
-                    moveButton();
-                } else {
-                    // On the third click, hide main content and start the lockout
-                    mainContent.style.display = 'none';
-                    lockoutContainer.style.display = 'block';
-                    startLockout();
-                }
-            });
-
-            // --- Initial Page Load Action ---
-            // Start the welcome message typewriter effect as soon as the page loads.
-            typeWriter(welcomeTextEl, 'welcome to waitlist.', () => {
-                // When the welcome message is finished, show the "join waitlist" button.
-                joinButton.style.display = 'inline-block';
-            });
-        });
-    </script>
-
+    // Load flow
+    (async function init(){
+      try {
+        const data = await loadSheet();
+        // Greeting typing will trigger on view; proceed to image reveal and meta once we have data.
+        const imgEl = document.getElementById('prodImg');
+        const wrapEl = document.getElementById('progWrap');
+        await revealImage(imgEl, wrapEl, data.imageUrl);
+        populateMeta(document.getElementById('meta'), data);
+      } catch (err) {
+        console.error('Failed to load data or image', err);
+        const meta = document.getElementById('meta');
+        meta.innerHTML = '<div class="row show">Could not load spreadsheet or image.</div>';
+      }
+    })();
+  </script>
 </body>
 </html>
