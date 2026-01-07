@@ -3,14 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>WAITLIST // UNAUTHORIZED</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet" />
+  <title>WAITLIST</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
   
   <style>
     :root {
       --bg: #0000FF;
-      --fg: #FFFFFF;
-      --danger: #000000;
+      --fg: #ffffff;
     }
 
     * { box-sizing: border-box; }
@@ -22,11 +21,11 @@
       background: var(--bg);
       color: var(--fg);
       font-family: "Inter", Helvetica, Arial, sans-serif;
-      overflow-x: hidden; /* Prevent horizontal scroll */
-      overscroll-behavior: none; /* Prevent pull-to-refresh on mobile */
+      overflow-x: hidden;
+      overscroll-behavior: none;
     }
 
-    /* Utilitarian Typography */
+    /* --- UTILITIES --- */
     .mono {
       font-family: "Courier New", Courier, monospace;
       text-transform: uppercase;
@@ -40,160 +39,163 @@
       flex-direction: column;
       align-items: center;
       position: relative;
-      z-index: 1;
-      transition: filter 0.1s;
     }
 
-    /* Glitch Animation for text */
-    @keyframes glitch {
-      0% { transform: translate(0); }
-      20% { transform: translate(-2px, 2px); }
-      40% { transform: translate(-2px, -2px); }
-      60% { transform: translate(2px, 2px); }
-      80% { transform: translate(2px, -2px); }
-      100% { transform: translate(0); }
-    }
-
-    /* Hero Section */
-    .hero-wrap {
+    /* --- CSS CLOCK --- */
+    .clock-wrap {
       position: sticky;
       top: 0;
       z-index: 10;
+      padding-top: 40px;
+      padding-bottom: 20px;
+      background: var(--bg);
       width: 100%;
-      height: 50vh;
       display: flex;
       justify-content: center;
-      align-items: center;
-      background: var(--bg);
-      will-change: transform;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+      transition: transform 0.1s;
     }
 
-    .hero-img {
-      width: 60vw;
-      max-width: 500px;
-      height: auto;
-      filter: contrast(1.2) grayscale(100%) blue-contrast(100%); 
-      /* CSS blend trick to make image look duotone blue/white */
-      mix-blend-mode: luminosity; 
-      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-      border: 1px solid var(--fg);
-    }
-
-    /* Spacer to allow scrolling effect */
-    .scroll-driver { height: 50vh; }
-
-    /* Main Content Stage */
-    .stage {
+    .clock {
+      width: 200px;
+      height: 200px;
+      border: 2px solid var(--fg);
+      border-radius: 50%;
       position: relative;
+    }
+
+    .hand {
+      position: absolute;
+      background: var(--fg);
+      transform-origin: bottom center;
+      left: 50%;
+      bottom: 50%;
+      border-radius: 2px;
+    }
+
+    .hand.hour {
+      width: 4px;
+      height: 50px;
+      margin-left: -2px; /* Center alignment */
+      transform: rotate(45deg); /* Start position */
+      animation: rotate-hand 720s linear infinite; /* 12 mins per circle (very slow) */
+    }
+
+    .hand.minute {
+      width: 4px;
+      height: 70px;
+      margin-left: -2px;
+      transform: rotate(315deg); /* Start position */
+      animation: rotate-hand 60s linear infinite; /* 60s per circle */
+    }
+
+    @keyframes rotate-hand {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* --- MAIN STAGE --- */
+    .stage {
+      width: 100%;
+      max-width: 600px;
+      padding: 20px;
+      margin-bottom: 100px; /* Space for footer/scroll */
+      text-align: center;
       z-index: 20;
       background: var(--bg);
+    }
+
+    /* Typewriter Heading */
+    .heading {
+      font-size: clamp(24px, 4vw, 32px);
+      margin: 40px 0;
+      min-height: 1.2em;
+      font-weight: 600;
+    }
+
+    /* Product Image */
+    .product-img {
       width: 100%;
-      padding: 40px 20px 100px 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
+      height: auto;
+      display: block;
+      margin: 0 auto 40px auto;
+      border-radius: 4px;
+      filter: grayscale(100%) contrast(1.1); /* B&W aesthetic */
     }
 
-    /* Product Details */
-    .details {
+    /* Meta Data from CSV */
+    .meta-data {
+      text-align: left;
+      border-top: 1px solid var(--fg);
       margin-bottom: 60px;
-      opacity: 0;
-      transform: translateY(20px);
-      transition: opacity 1s ease, transform 1s ease;
     }
-    .details.visible { opacity: 1; transform: translateY(0); }
 
-    .detail-row {
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
       border-bottom: 1px solid var(--fg);
       padding: 12px 0;
       font-size: 14px;
-      display: flex;
-      justify-content: space-between;
-      width: 100%;
-      max-width: 400px;
-      margin: 0 auto;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.5s, transform 0.5s;
     }
+    .meta-row.visible { opacity: 1; transform: translateY(0); }
 
-    /* The Impossible Button */
-    .playfield {
+    /* --- THE BUTTON --- */
+    /* Invisible container to define the "play area" */
+    .btn-area {
       position: relative;
       width: 100%;
-      max-width: 600px;
-      height: 300px;
-      border: 1px dashed rgba(255,255,255,0.3);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-top: 40px;
-      overflow: hidden; /* Keep button inside visual box */
-      touch-action: none; /* Disable default touch actions */
+      height: 300px; 
+      /* No border, invisible box */
     }
 
-    .havoc-btn {
+    .waitlist-btn {
       position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 14px 24px;
       background: var(--fg);
       color: var(--bg);
       border: none;
-      padding: 16px 24px;
       font-family: "Inter", sans-serif;
-      font-weight: 800;
+      font-weight: 600;
       font-size: 16px;
-      text-transform: uppercase;
-      cursor: crosshair;
+      cursor: pointer;
+      border-radius: 4px;
+      white-space: nowrap;
+      transition: top 0.1s ease, left 0.1s ease; /* Smooth movement */
       user-select: none;
-      pointer-events: auto;
-      transition: transform 0.1s cubic-bezier(0.1, 0.7, 1.0, 0.1); 
-      will-change: top, left;
-      z-index: 100;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    .havoc-btn:active {
-      background: red; 
-      color: white;
-    }
-
-    /* Lockout Overlay */
-    .lockout-screen {
+    /* --- LOCKOUT SCREEN --- */
+    .lockout {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: #000;
-      color: #fff;
+      background: var(--bg);
+      color: var(--fg);
       display: none;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       z-index: 9999;
-      padding: 20px;
       text-align: center;
     }
 
-    .lockout-text {
-      font-size: 1.5rem;
-      line-height: 1.4;
-      margin-bottom: 20px;
-      animation: glitch 0.2s infinite;
+    .lockout-msg {
+      font-size: 14px; /* Small text as requested */
+      margin-bottom: 10px;
+      letter-spacing: 1px;
     }
-
+    
     .timer {
-      font-size: 4rem;
-      font-weight: 800;
-    }
-
-    /* Shake Animation for Body */
-    .shake {
-      animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-    }
-
-    @keyframes shake {
-      10%, 90% { transform: translate3d(-1px, 0, 0); }
-      20%, 80% { transform: translate3d(2px, 0, 0); }
-      30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-      40%, 60% { transform: translate3d(4px, 0, 0); }
+      font-size: 14px;
+      font-weight: 600;
     }
 
   </style>
@@ -202,172 +204,186 @@
 
   <div class="container" id="mainContainer">
     
-    <div class="hero-wrap" id="hero">
-      <img src="https://i.ibb.co/DP0MHnjM/IMG-6365.jpg" alt="Artifact" class="hero-img" />
+    <div class="clock-wrap" id="clockWrap">
+      <div class="clock">
+        <div class="hand hour"></div>
+        <div class="hand minute"></div>
+      </div>
     </div>
 
-    <div class="scroll-driver"></div>
-
     <main class="stage">
-      
-      <h1 class="mono" style="font-size: clamp(20px, 5vw, 32px); margin-bottom: 40px; min-height: 1.2em;">
-        <span id="typewriter"></span><span style="animation: blink 1s infinite">_</span>
-      </h1>
-
-      <div class="details" id="details">
-        <div class="detail-row"><span class="mono">ITEM</span> <span>OBJECT_01</span></div>
-        <div class="detail-row"><span class="mono">MATERIAL</span> <span>POLYCARBONATE</span></div>
-        <div class="detail-row"><span class="mono">STATUS</span> <span>UNRELEASED</span></div>
-        <div class="detail-row"><span class="mono">STOCK</span> <span>0</span></div>
+      <div class="heading">
+        <span id="typeTarget"></span><span style="animation: blink 1s infinite">|</span>
       </div>
 
-      <div class="playfield" id="playfield">
-        <button class="havoc-btn" id="havocBtn">JOIN WAITLIST</button>
-      </div>
+      <img src="https://i.ibb.co/hFDSgSMb/tshirt.jpg" alt="Item" class="product-img" />
 
-      <p class="mono" style="margin-top: 20px; font-size: 10px; opacity: 0.6;">
-        ATTEMPTING TO BYPASS WAITLIST PROTOCOLS<br>WILL RESULT IN IMMEDIATE TERMINATION.
-      </p>
+      <div class="meta-data" id="metaData">
+        </div>
+
+      <div class="btn-area" id="btnArea">
+        <button class="waitlist-btn" id="runBtn">Join the waitlist</button>
+      </div>
 
     </main>
   </div>
 
-  <div class="lockout-screen" id="lockout">
-    <div class="lockout-text mono">SYSTEM COMPROMISED<br>USER LOCKOUT INITIATED</div>
-    <div class="timer mono" id="timer">60:00</div>
+  <div class="lockout" id="lockoutScreen">
+    <div class="lockout-msg mono">ACCESS TEMPORARILY SUSPENDED</div>
+    <div class="timer mono" id="lockoutTimer">00:00</div>
   </div>
 
   <script>
-    /* --- CONFIG & STATE --- */
-    const els = {
-      hero: document.getElementById('hero'),
-      typewriter: document.getElementById('typewriter'),
-      details: document.getElementById('details'),
-      btn: document.getElementById('havocBtn'),
-      field: document.getElementById('playfield'),
-      lockout: document.getElementById('lockout'),
-      timer: document.getElementById('timer'),
-      container: document.getElementById('mainContainer')
-    };
+    /* --- CONFIG --- */
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6aU1_jB0juldfdNBs-KX3XLLqOuAoZDNpg_znvr_x1ToUAariHKo2Gz-REVye58V_nenvXETUOTZk/pub?output=csv';
 
-    let lockoutActive = false;
-    let clickCount = 0;
-
-    /* --- SCROLL EFFECT --- */
+    /* --- SCROLL SHRINK EFFECT --- */
     window.addEventListener('scroll', () => {
-      if(lockoutActive) return;
-      const scrolled = window.scrollY;
-      const scale = Math.max(0.4, 1 - (scrolled / 500));
-      const opacity = Math.max(0.2, 1 - (scrolled / 300));
-      
-      els.hero.style.transform = `scale(${scale})`;
-      els.hero.style.opacity = opacity;
-    }, { passive: true });
-
-    /* --- TYPEWRITER --- */
-    const textToType = "NOTHING IS FOR SALE.";
-    let typeIdx = 0;
-    
-    function type() {
-      if (typeIdx < textToType.length) {
-        els.typewriter.textContent += textToType.charAt(typeIdx);
-        typeIdx++;
-        setTimeout(type, 50 + Math.random() * 50); // Random typing speed
-      } else {
-        // Show details after typing
-        setTimeout(() => els.details.classList.add('visible'), 500);
-      }
-    }
-    
-    // Start typing when page loads
-    window.onload = type;
-
-    /* --- THE HAVOC BUTTON LOGIC --- */
-    
-    // Reposition logic
-    function moveButton(e) {
-      if (lockoutActive) return;
-
-      const btnRect = els.btn.getBoundingClientRect();
-      const fieldRect = els.field.getBoundingClientRect();
-      
-      // Calculate boundaries within the field
-      const maxX = fieldRect.width - btnRect.width;
-      const maxY = fieldRect.height - btnRect.height;
-      
-      // Random position
-      const newX = Math.random() * maxX;
-      const newY = Math.random() * maxY;
-      
-      els.btn.style.left = `${newX}px`;
-      els.btn.style.top = `${newY}px`;
-      
-      // Visual flair
-      els.btn.innerText = ["NOPE.", "TRY HARDER.", "ALMOST.", "TOO SLOW.", "DENIED."][Math.floor(Math.random() * 5)];
-      els.btn.style.background = Math.random() > 0.9 ? 'red' : 'white';
-      els.btn.style.color = els.btn.style.background === 'red' ? 'white' : 'blue';
-      
-      clickCount++;
-
-      // Trigger havok effects if user is persistent
-      if(clickCount > 5) {
-         document.body.classList.add('shake');
-         setTimeout(() => document.body.classList.remove('shake'), 500);
-      }
-      
-      if(clickCount > 10) {
-        initiateLockout();
-      }
-    }
-
-    // Interaction Listeners (Desktop & Mobile)
-    els.btn.addEventListener('mouseover', moveButton); // PC hover
-    els.btn.addEventListener('touchstart', (e) => {
-       e.preventDefault(); // Prevent click
-       moveButton();
-    }, {passive: false});
-    
-    // If they actually manage to click it (rare)
-    els.btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      initiateLockout();
+      const scrollY = window.scrollY;
+      const clock = document.getElementById('clockWrap');
+      const scale = Math.max(0.5, 1 - (scrollY / 400));
+      clock.style.transform = `scale(${scale})`;
     });
 
-    /* --- LOCKOUT SEQUENCE --- */
-    function initiateLockout() {
-      if(lockoutActive) return;
-      lockoutActive = true;
-      
-      els.lockout.style.display = 'flex';
-      els.container.style.filter = 'blur(10px)';
-      
-      let seconds = 300; // 5 minute ban
-      
-      const interval = setInterval(() => {
-        seconds--;
-        const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-        const s = (seconds % 60).toString().padStart(2, '0');
-        els.timer.innerText = `${m}:${s}`;
-        
-        if (seconds <= 0) {
-          clearInterval(interval);
-          location.reload();
-        }
-      }, 1000);
+    /* --- TYPEWRITER --- */
+    async function typeText(text) {
+      const el = document.getElementById('typeTarget');
+      el.textContent = '';
+      for (let i = 0; i < text.length; i++) {
+        el.textContent += text.charAt(i);
+        await new Promise(r => setTimeout(r, 60)); // Typing speed
+      }
     }
 
-    /* --- INITIALIZATION --- */
-    // Ensure button starts in center
-    function centerButton() {
-       const fieldRect = els.field.getBoundingClientRect();
-       const btnRect = els.btn.getBoundingClientRect();
-       els.btn.style.left = (fieldRect.width / 2 - btnRect.width / 2) + 'px';
-       els.btn.style.top = (fieldRect.height / 2 - btnRect.height / 2) + 'px';
+    /* --- DATA LOADING (Original Logic) --- */
+    function parseCSV(text) {
+      // Simple parser handling quotes roughly
+      const rows = [];
+      let row = [], field = '', inQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i], n = text[i+1];
+        if (c === '"') {
+          if (inQuotes && n === '"') { field += '"'; i++; }
+          else inQuotes = !inQuotes;
+        } else if (c === ',' && !inQuotes) {
+          row.push(field); field = '';
+        } else if ((c === '\n' || c === '\r') && !inQuotes) {
+          if (field !== '' || row.length) { row.push(field); field = ''; rows.push(row); row = []; }
+          if (c === '\r' && n === '\n') i++;
+        } else { field += c; }
+      }
+      if (field !== '' || row.length) { row.push(field); rows.push(row); }
+      return rows;
     }
+
+    async function initData() {
+      try {
+        const res = await fetch(CSV_URL);
+        const text = await res.text();
+        const rows = parseCSV(text);
+        
+        // Extract B1..B5 (Index 1 of first 5 rows)
+        const getVal = (r) => (rows[r] && rows[r][1]) ? rows[r][1].trim() : '---';
+        
+        const data = [
+           { label: 'ITEM', val: getVal(0) },     // B1
+           { label: 'MATERIAL', val: getVal(2) }, // B3
+           { label: 'PRICE', val: getVal(3) },    // B4
+           { label: 'WAIT', val: getVal(4) }      // B5
+        ];
+
+        const container = document.getElementById('metaData');
+        container.innerHTML = '';
+        
+        data.forEach((item, index) => {
+          const div = document.createElement('div');
+          div.className = 'meta-row mono';
+          div.innerHTML = `<span>${item.label}</span> <span>${item.val}</span>`;
+          container.appendChild(div);
+          
+          // Staggered fade in
+          setTimeout(() => div.classList.add('visible'), index * 200);
+        });
+
+      } catch (e) {
+        console.error("Sheet load failed", e);
+        document.getElementById('metaData').innerHTML = '<div class="meta-row visible mono">DATA CONNECTION LOST</div>';
+      }
+    }
+
+    /* --- THE HAVOC BUTTON --- */
+    const btn = document.getElementById('runBtn');
+    const area = document.getElementById('btnArea');
+    let clicks = 0;
+
+    function moveButton(e) {
+      // Don't prevent default on scroll, but prevent click logic
+      // Calculate boundaries
+      const areaRect = area.getBoundingClientRect();
+      const btnRect = btn.getBoundingClientRect();
+
+      // Available space inside the container
+      const maxX = areaRect.width - btnRect.width;
+      const maxY = areaRect.height - btnRect.height;
+
+      // Random coords
+      const x = Math.random() * maxX;
+      const y = Math.random() * maxY;
+
+      // Apply relative positioning within the btn-area
+      // We use Top/Left on the absolute element relative to the container
+      btn.style.left = x + 'px';
+      btn.style.top = y + 'px';
+      // Reset translate which centered it initially
+      btn.style.transform = 'translate(0,0)'; 
+
+      clicks++;
+      if (clicks > 8) triggerLockout();
+    }
+
+    // Trigger on hover (desktop)
+    btn.addEventListener('mouseover', moveButton);
     
-    // Wait for layout
-    setTimeout(centerButton, 100);
-    window.addEventListener('resize', centerButton);
+    // Trigger on touch start (mobile)
+    btn.addEventListener('touchstart', (e) => {
+      e.preventDefault(); // Stop the click
+      moveButton();
+    }, { passive: false });
+
+    // Fallback if they manage to click
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      triggerLockout();
+    });
+
+    /* --- LOCKOUT --- */
+    function triggerLockout() {
+      const screen = document.getElementById('lockoutScreen');
+      const timerEl = document.getElementById('lockoutTimer');
+      
+      screen.style.display = 'flex';
+      document.getElementById('mainContainer').style.display = 'none';
+      
+      let timeLeft = 600; // 10 minutes
+      
+      const tick = () => {
+        timeLeft--;
+        const m = Math.floor(timeLeft / 60);
+        const s = timeLeft % 60;
+        timerEl.textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        
+        if(timeLeft <= 0) window.location.reload();
+      };
+      
+      setInterval(tick, 1000);
+      tick();
+    }
+
+    /* --- INIT --- */
+    // Start typing
+    setTimeout(() => typeText("Join the waitlist."), 500);
+    // Load CSV data
+    initData();
 
   </script>
 </body>
