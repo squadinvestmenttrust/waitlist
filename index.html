@@ -70,84 +70,121 @@
       left: 50%;
       bottom: 50%;
       border-radius: 2px;
+      /* Ensure they stay in final position after spinning */
+      animation-fill-mode: forwards; 
+      animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1.0); /* Smooth ease-out */
     }
 
     .hand.hour {
-      width: 4px;
+      width: 2px; /* Slimmer */
       height: 50px;
-      margin-left: -2px; /* Center alignment */
-      transform: rotate(45deg); /* Start position */
-      animation: rotate-hand 720s linear infinite; /* 12 mins per circle (very slow) */
+      margin-left: -1px; /* Center alignment */
+      /* Spin to approx 10 o'clock position (-55deg) */
+      animation-name: spin-hour;
+      animation-duration: 3s;
     }
 
     .hand.minute {
-      width: 4px;
+      width: 2px; /* Slimmer */
       height: 70px;
-      margin-left: -2px;
-      transform: rotate(315deg); /* Start position */
-      animation: rotate-hand 60s linear infinite; /* 60s per circle */
+      margin-left: -1px;
+      /* Spin to approx 10 minute position (60deg) */
+      animation-name: spin-minute;
+      animation-duration: 2.5s;
     }
 
-    @keyframes rotate-hand {
+    @keyframes spin-hour {
       from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
+      to { transform: rotate(-55deg); }
+    }
+
+    @keyframes spin-minute {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(60deg); }
     }
 
     /* --- MAIN STAGE --- */
     .stage {
       width: 100%;
-      max-width: 600px;
+      max-width: 800px; /* Increased max-width slightly for main area */
       padding: 20px;
-      margin-bottom: 100px; /* Space for footer/scroll */
+      margin-bottom: 100px;
       text-align: center;
       z-index: 20;
       background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     /* Typewriter Heading */
-    .heading {
+    .heading-wrap {
       font-size: clamp(24px, 4vw, 32px);
       margin: 40px 0;
       min-height: 1.2em;
       font-weight: 600;
+      display: inline-block;
+    }
+    
+    .blinking-cursor {
+      animation: blink 1s infinite step-end;
+      margin-left: 2px;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+
+    /* Product Image Container - CSS trick for background */
+    .img-container {
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto 40px auto;
+      background-color: var(--bg); /* Ensure background behind image is blue */
+      border-radius: 4px;
+      overflow: hidden;
     }
 
-    /* Product Image */
     .product-img {
       width: 100%;
       height: auto;
       display: block;
-      margin: 0 auto 40px auto;
-      border-radius: 4px;
-      filter: grayscale(100%) contrast(1.1); /* B&W aesthetic */
+      /* CSS Trick to make the grey background blue:
+         1. Increase contrast to make the grey background lighter and shirt whiter.
+         2. Use 'multiply' blend mode against the blue container background. 
+            This tints everything blue, making the grey background match the site 
+            and giving the shirt a monochromatic blue look.
+      */
+      filter: contrast(1.3) brightness(1.1);
+      mix-blend-mode: multiply; 
     }
 
-    /* Meta Data from CSV */
+    /* Meta Data Table */
     .meta-data {
-      text-align: left;
+      text-align: center;
       border-top: 1px solid var(--fg);
-      margin-bottom: 60px;
+      margin: 0 auto 60px auto; /* Centered horizontally */
+      width: fit-content; /* Only as wide as it needs to be */
+      min-width: 280px; /* Ensure it doesn't look too crushed on small screens */
     }
 
     .meta-row {
       display: flex;
       justify-content: space-between;
       border-bottom: 1px solid var(--fg);
-      padding: 12px 0;
+      padding: 12px 10px;
       font-size: 14px;
       opacity: 0;
       transform: translateY(10px);
       transition: opacity 0.5s, transform 0.5s;
+      gap: 20px; /* Minimum space between labels and values */
     }
     .meta-row.visible { opacity: 1; transform: translateY(0); }
 
-    /* --- THE BUTTON --- */
-    /* Invisible container to define the "play area" */
+    /* --- THE BUTTON AREA --- */
     .btn-area {
       position: relative;
       width: 100%;
+      max-width: 600px;
       height: 300px; 
-      /* No border, invisible box */
     }
 
     .waitlist-btn {
@@ -165,7 +202,7 @@
       cursor: pointer;
       border-radius: 4px;
       white-space: nowrap;
-      transition: top 0.1s ease, left 0.1s ease; /* Smooth movement */
+      transition: top 0.1s ease, left 0.1s ease;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
@@ -187,16 +224,8 @@
       text-align: center;
     }
 
-    .lockout-msg {
-      font-size: 14px; /* Small text as requested */
-      margin-bottom: 10px;
-      letter-spacing: 1px;
-    }
-    
-    .timer {
-      font-size: 14px;
-      font-weight: 600;
-    }
+    .lockout-msg { font-size: 14px; margin-bottom: 10px; letter-spacing: 1px; }
+    .timer { font-size: 14px; font-weight: 600; }
 
   </style>
 </head>
@@ -212,11 +241,13 @@
     </div>
 
     <main class="stage">
-      <div class="heading">
-        <span id="typeTarget"></span><span style="animation: blink 1s infinite">|</span>
-      </div>
+      <div class="heading-wrap" id="headingWrap">
+        <span id="typeTarget"></span>
+        </div>
 
-      <img src="https://i.ibb.co/hFDSgSMb/tshirt.jpg" alt="Item" class="product-img" />
+      <div class="img-container">
+        <img src="https://i.ibb.co/hFDSgSMb/tshirt.jpg" alt="Item" class="product-img" />
+      </div>
 
       <div class="meta-data" id="metaData">
         </div>
@@ -247,17 +278,25 @@
 
     /* --- TYPEWRITER --- */
     async function typeText(text) {
-      const el = document.getElementById('typeTarget');
-      el.textContent = '';
+      const target = document.getElementById('typeTarget');
+      const wrap = document.getElementById('headingWrap');
+      target.textContent = '';
+      
+      // Type the text
       for (let i = 0; i < text.length; i++) {
-        el.textContent += text.charAt(i);
+        target.textContent += text.charAt(i);
         await new Promise(r => setTimeout(r, 60)); // Typing speed
       }
+
+      // Append blinking cursor AFTER typing finishes
+      const cursor = document.createElement('span');
+      cursor.className = 'blinking-cursor';
+      cursor.innerHTML = '|';
+      wrap.appendChild(cursor);
     }
 
-    /* --- DATA LOADING (Original Logic) --- */
+    /* --- DATA LOADING --- */
     function parseCSV(text) {
-      // Simple parser handling quotes roughly
       const rows = [];
       let row = [], field = '', inQuotes = false;
       for (let i = 0; i < text.length; i++) {
@@ -281,15 +320,13 @@
         const res = await fetch(CSV_URL);
         const text = await res.text();
         const rows = parseCSV(text);
-        
-        // Extract B1..B5 (Index 1 of first 5 rows)
         const getVal = (r) => (rows[r] && rows[r][1]) ? rows[r][1].trim() : '---';
         
         const data = [
-           { label: 'ITEM', val: getVal(0) },     // B1
-           { label: 'MATERIAL', val: getVal(2) }, // B3
-           { label: 'PRICE', val: getVal(3) },    // B4
-           { label: 'WAIT', val: getVal(4) }      // B5
+           { label: 'ITEM', val: getVal(0) },
+           { label: 'MATERIAL', val: getVal(2) },
+           { label: 'PRICE', val: getVal(3) },
+           { label: 'WAIT', val: getVal(4) }
         ];
 
         const container = document.getElementById('metaData');
@@ -298,11 +335,10 @@
         data.forEach((item, index) => {
           const div = document.createElement('div');
           div.className = 'meta-row mono';
-          div.innerHTML = `<span>${item.label}</span> <span>${item.val}</span>`;
+          // Using span styling to ensure alignment in centered table
+          div.innerHTML = `<span style="text-align:left">${item.label}</span> <span style="text-align:right">${item.val}</span>`;
           container.appendChild(div);
-          
-          // Staggered fade in
-          setTimeout(() => div.classList.add('visible'), index * 200);
+          setTimeout(() => div.classList.add('visible'), index * 200 + 500);
         });
 
       } catch (e) {
@@ -317,72 +353,47 @@
     let clicks = 0;
 
     function moveButton(e) {
-      // Don't prevent default on scroll, but prevent click logic
-      // Calculate boundaries
       const areaRect = area.getBoundingClientRect();
       const btnRect = btn.getBoundingClientRect();
-
-      // Available space inside the container
       const maxX = areaRect.width - btnRect.width;
       const maxY = areaRect.height - btnRect.height;
-
-      // Random coords
       const x = Math.random() * maxX;
       const y = Math.random() * maxY;
 
-      // Apply relative positioning within the btn-area
-      // We use Top/Left on the absolute element relative to the container
       btn.style.left = x + 'px';
       btn.style.top = y + 'px';
-      // Reset translate which centered it initially
       btn.style.transform = 'translate(0,0)'; 
 
       clicks++;
       if (clicks > 8) triggerLockout();
     }
 
-    // Trigger on hover (desktop)
     btn.addEventListener('mouseover', moveButton);
-    
-    // Trigger on touch start (mobile)
-    btn.addEventListener('touchstart', (e) => {
-      e.preventDefault(); // Stop the click
-      moveButton();
-    }, { passive: false });
-
-    // Fallback if they manage to click
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      triggerLockout();
-    });
+    btn.addEventListener('touchstart', (e) => { e.preventDefault(); moveButton(); }, { passive: false });
+    btn.addEventListener('click', (e) => { e.preventDefault(); triggerLockout(); });
 
     /* --- LOCKOUT --- */
     function triggerLockout() {
       const screen = document.getElementById('lockoutScreen');
       const timerEl = document.getElementById('lockoutTimer');
-      
       screen.style.display = 'flex';
       document.getElementById('mainContainer').style.display = 'none';
       
-      let timeLeft = 600; // 10 minutes
-      
+      let timeLeft = 600;
       const tick = () => {
         timeLeft--;
         const m = Math.floor(timeLeft / 60);
         const s = timeLeft % 60;
         timerEl.textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-        
         if(timeLeft <= 0) window.location.reload();
       };
-      
       setInterval(tick, 1000);
       tick();
     }
 
     /* --- INIT --- */
-    // Start typing
-    setTimeout(() => typeText("Join the waitlist."), 500);
-    // Load CSV data
+    // Start typing after a brief pause
+    setTimeout(() => typeText("Join the waitlist."), 800);
     initData();
 
   </script>
