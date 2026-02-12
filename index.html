@@ -1,404 +1,235 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>WAITLIST</title>
-  
-  <style>
-    :root {
-      --bg: #0000FF;
-      --fg: #ffffff;
-      /* Uniform font stack */
-      --font-stack: Helvetica, Arial, sans-serif;
-      /* Uniform font size for main elements */
-      --base-size: 18px; 
-    }
-
-    * { box-sizing: border-box; }
-
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      background: var(--bg);
-      color: var(--fg);
-      font-family: var(--font-stack);
-      font-weight: 400; /* No bold */
-      font-size: var(--base-size);
-      overflow-x: hidden;
-      overscroll-behavior: none;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* --- UTILITIES --- */
-    .mono {
-      font-family: "Courier New", Courier, monospace;
-      text-transform: uppercase;
-      font-size: 0.8em; /* Keep lockout text small */
-    }
-
-    .container {
-      width: 100%;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      position: relative;
-    }
-
-    /* --- CSS CLOCK --- */
-    .clock-wrap {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      padding-top: 40px;
-      padding-bottom: 20px;
-      background: var(--bg);
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      transition: transform 0.1s;
-    }
-
-    .clock {
-      width: 200px;
-      height: 200px;
-      border: 2px solid var(--fg);
-      border-radius: 50%;
-      position: relative;
-    }
-
-    .hand {
-      position: absolute;
-      background: var(--fg);
-      transform-origin: bottom center;
-      left: 50%;
-      bottom: 50%;
-      border-radius: 2px;
-      animation-fill-mode: forwards; 
-      animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1.0); /* Smooth easing */
-    }
-
-    .hand.hour {
-      width: 2px;
-      height: 45px; /* Shortened */
-      margin-left: -1px;
-      /* Spin clockwise to approx 10 o'clock position (300 deg) */
-      animation-name: spin-hour;
-      animation-duration: 2.5s;
-    }
-
-    .hand.minute {
-      width: 2px;
-      height: 65px; /* Shortened */
-      margin-left: -1px;
-      /* Spin clockwise to approx 2 o'clock position (60 deg) */
-      animation-name: spin-minute;
-      animation-duration: 2.8s;
-    }
-
-    /* Clockwise rotation logic: Start at 0, do a full circle (360), then land on target */
-    @keyframes spin-hour {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(660deg); } /* 360 + 300 (10 o'clock) */
-    }
-
-    @keyframes spin-minute {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(420deg); } /* 360 + 60 (2 o'clock) */
-    }
-
-    /* --- MAIN STAGE --- */
-    .stage {
-      width: 100%;
-      max-width: 800px;
-      padding: 20px;
-      margin-bottom: 100px;
-      text-align: center;
-      z-index: 20;
-      background: var(--bg);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    /* Typewriter Heading */
-    .heading-wrap {
-      /* Same size as base font */
-      font-size: var(--base-size); 
-      margin: 40px 0;
-      min-height: 1.2em;
-      font-weight: 400; /* No bold */
-      display: inline-block;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Heatmap</title>
     
-    .blinking-cursor {
-      animation: blink 1s infinite step-end;
-      margin-left: 2px;
-      font-weight: 400;
-    }
-    @keyframes blink { 50% { opacity: 0; } }
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
-    /* Product Image Container */
-    .img-container {
-      width: 100%;
-      max-width: 500px;
-      margin: 0 auto 40px auto;
-      background-color: var(--bg);
-      border-radius: 4px;
-      overflow: hidden;
-    }
+    <style>
+        :root {
+            --bb-black: #000000;
+            --bb-orange: #ff9900;
+            --bb-text: #e0e0e0;
+            --bb-green: #33ff33;
+            --bb-red: #ff3333;
+        }
 
-    .product-img {
-      width: 100%;
-      height: auto;
-      display: block;
-      filter: contrast(1.3) brightness(1.1);
-      mix-blend-mode: multiply; 
-    }
+        body {
+            background-color: var(--bb-black);
+            color: var(--bb-orange);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 20px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
 
-    /* Meta Data Table */
-    .meta-data {
-      text-align: center;
-      border-top: 1px solid var(--fg);
-      margin: 0 auto 60px auto;
-      /* Narrow width as requested */
-      width: 100%;
-      max-width: 260px; 
-    }
+        header {
+            border-bottom: 2px solid var(--bb-orange);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
 
-    .meta-row {
-      display: flex;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--fg);
-      padding: 12px 0;
-      /* Slightly smaller font for table */
-      font-size: 14px; 
-      opacity: 0;
-      transform: translateY(10px);
-      transition: opacity 0.5s, transform 0.5s;
-    }
-    .meta-row.visible { opacity: 1; transform: translateY(0); }
+        .terminal-text {
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
 
-    /* --- THE BUTTON AREA --- */
-    .btn-area {
-      position: relative;
-      width: 100%;
-      max-width: 600px;
-      height: 300px; 
-    }
+        #market-question {
+            color: var(--bb-text);
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
 
-    .waitlist-btn {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      padding: 14px 24px;
-      
-      /* New Button Style: Blue BG, White Text, White Border */
-      background: var(--bg);
-      color: var(--fg);
-      border: 1px solid var(--fg);
-      
-      font-family: var(--font-stack);
-      font-weight: 400; /* No bold */
-      font-size: var(--base-size); /* Same size as header */
-      
-      cursor: pointer;
-      border-radius: 4px;
-      white-space: nowrap;
-      transition: top 0.1s ease, left 0.1s ease;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-    }
+        #market-answer {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--bb-orange);
+            text-shadow: 0 0 5px rgba(255, 153, 0, 0.5);
+        }
 
-    /* --- LOCKOUT SCREEN --- */
-    .lockout {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: var(--bg);
-      color: var(--fg);
-      display: none;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-      text-align: center;
-    }
+        #chart-container {
+            flex-grow: 1;
+            width: 100%;
+            min-height: 500px;
+            border: 1px solid #333;
+        }
 
-    .lockout-msg { margin-bottom: 10px; letter-spacing: 1px; }
-    .timer { font-weight: 400; }
+        .footer {
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: #555;
+            text-align: right;
+        }
 
-  </style>
+        /* Loading State */
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--bb-orange);
+            font-size: 1.5rem;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+    </style>
 </head>
 <body>
 
-  <div class="container" id="mainContainer">
-    
-    <div class="clock-wrap" id="clockWrap">
-      <div class="clock">
-        <div class="hand hour"></div>
-        <div class="hand minute"></div>
-      </div>
+    <header>
+        <div>
+            <div id="market-question">Did you beat the market today?</div>
+            <div id="market-answer">LOADING...</div>
+        </div>
+        <div class="terminal-text">PORTFOLIO HEATMAP <span style="font-size:0.8em; color:#555;">>> LIVE</span></div>
+    </header>
+
+    <div id="chart-container">
+        <div id="loading">FETCHING DATA...</div>
     </div>
 
-    <main class="stage">
-      <div class="heading-wrap" id="headingWrap">
-        <span id="typeTarget"></span>
-      </div>
+    <div class="footer">
+        DATA SOURCE: GOOGLE SHEETS // UPDATED LIVE
+    </div>
 
-      <div class="img-container">
-        <img src="https://i.ibb.co/hFDSgSMb/tshirt.jpg" alt="Item" class="product-img" />
-      </div>
+    <script>
+        // The URL to your specific published Google Sheet CSV
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRj4frRRj12rs9PbuIxwY6h6xyJHbxno1CQCUl2_fTek-CvKPnYYVwCZoa0t47qB-yzKSJKhU18dYcZ/pub?output=csv';
 
-      <div class="meta-data" id="metaData">
-        </div>
+        // Helper to parse currency/percentage strings into pure numbers
+        function parseNumber(str) {
+            if (!str) return 0;
+            // Remove % signs, commas, and trim whitespace
+            const cleanStr = str.toString().replace(/[%,]/g, '').trim();
+            return parseFloat(cleanStr) || 0;
+        }
 
-      <div class="btn-area" id="btnArea">
-        <button class="waitlist-btn" id="runBtn">Join the waitlist.</button>
-      </div>
+        function init() {
+            Papa.parse(SHEET_URL, {
+                download: true,
+                header: false, // We use index based parsing as rows are specific
+                complete: function(results) {
+                    try {
+                        const data = results.data;
+                        renderDashboard(data);
+                    } catch (e) {
+                        console.error(e);
+                        document.getElementById('market-answer').innerText = "DATA ERROR";
+                        document.getElementById('loading').innerText = "ERROR PARSING DATA";
+                    }
+                },
+                error: function(err) {
+                    console.error(err);
+                    document.getElementById('market-answer').innerText = "CONN ERROR";
+                }
+            });
+        }
 
-    </main>
-  </div>
+        function renderDashboard(rows) {
+            // 1. Extract the "Beat the Market" answer from Cell E1 (Row 0, Col 4)
+            // Note: Array index 0 is Row 1, Index 4 is Column E
+            const marketAnswer = rows[0][4]; 
+            const answerEl = document.getElementById('market-answer');
+            answerEl.innerText = marketAnswer ? marketAnswer.toUpperCase() : "N/A";
+            
+            // Color code the answer
+            if(marketAnswer && marketAnswer.toLowerCase().includes('yes')) {
+                answerEl.style.color = '#33ff33'; // Green
+            } else if (marketAnswer && marketAnswer.toLowerCase().includes('no')) {
+                answerEl.style.color = '#ff3333'; // Red
+            }
 
-  <div class="lockout" id="lockoutScreen">
-    <div class="lockout-msg mono">Due to high demand, you have been placed in a queue. <BR><BR> Please wait to join waitlist.</div>
-    <div class="timer mono" id="lockoutTimer">00:00</div>
-  </div>
+            // 2. Extract Heatmap Data
+            // Data starts at Row 4 (Array index 3)
+            // Col A (0) = Stock
+            // Col D (3) = Portfolio % (Size)
+            // Col E (4) = Daily Change % (Color)
+            
+            let tickers = [];
+            let weights = [];
+            let changes = [];
+            let textLabels = [];
 
-  <script>
-    /* --- CONFIG --- */
-    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6aU1_jB0juldfdNBs-KX3XLLqOuAoZDNpg_znvr_x1ToUAariHKo2Gz-REVye58V_nenvXETUOTZk/pub?output=csv';
+            // Loop from row index 3 down to the end
+            for (let i = 3; i < rows.length; i++) {
+                const row = rows[i];
+                
+                // Ensure row has data (check if Ticker exists)
+                if (row[0]) {
+                    const ticker = row[0];
+                    const weight = parseNumber(row[3]);
+                    const change = parseNumber(row[4]);
 
-    /* --- SCROLL SHRINK EFFECT --- */
-    window.addEventListener('scroll', () => {
-      const scrollY = window.scrollY;
-      const clock = document.getElementById('clockWrap');
-      const scale = Math.max(0.5, 1 - (scrollY / 400));
-      clock.style.transform = `scale(${scale})`;
-    });
+                    tickers.push(ticker);
+                    weights.push(weight);
+                    changes.push(change);
+                    
+                    // Create hover text
+                    textLabels.push(`${ticker}<br>Weight: ${weight}%<br>Change: ${change}%`);
+                }
+            }
 
-    /* --- TYPEWRITER --- */
-    async function typeText(text) {
-      const target = document.getElementById('typeTarget');
-      const wrap = document.getElementById('headingWrap');
-      target.textContent = '';
-      
-      for (let i = 0; i < text.length; i++) {
-        target.textContent += text.charAt(i);
-        await new Promise(r => setTimeout(r, 60)); 
-      }
+            // 3. Render Plotly Heatmap (Treemap)
+            const plotData = [{
+                type: 'treemap',
+                labels: tickers,
+                parents: tickers.map(() => ""), // No hierarchy, just flat tiles
+                values: weights,
+                marker: {
+                    colors: changes,
+                    colorscale: [
+                        [0, '#ff0000'],   // Deep Red for big drops
+                        [0.5, '#000000'], // Black for zero/neutral
+                        [1, '#00ff00']    // Bright Green for big gains
+                    ],
+                    cmid: 0, // Center the color scale at 0% change
+                    line: { width: 2, color: '#000' } // Border between tiles
+                },
+                text: textLabels,
+                textinfo: "label+value+percent entry", // Show label and value
+                texttemplate: "<b>%{label}</b><br>%{color:.2f}%", // Custom tile text
+                hoverinfo: "text",
+                textfont: {
+                    family: 'Courier New',
+                    size: 16,
+                    color: '#ffffff'
+                }
+            }];
 
-      // Append blinking cursor AFTER typing
-      const cursor = document.createElement('span');
-      cursor.className = 'blinking-cursor';
-      cursor.innerHTML = '|';
-      wrap.appendChild(cursor);
-    }
+            const layout = {
+                margin: {t: 0, l: 0, r: 0, b: 0},
+                paper_bgcolor: '#000000',
+                plot_bgcolor: '#000000',
+                font: {
+                    family: 'Courier New',
+                    color: '#ff9900'
+                }
+            };
 
-    /* --- DATA LOADING --- */
-    function parseCSV(text) {
-      const rows = [];
-      let row = [], field = '', inQuotes = false;
-      for (let i = 0; i < text.length; i++) {
-        const c = text[i], n = text[i+1];
-        if (c === '"') {
-          if (inQuotes && n === '"') { field += '"'; i++; }
-          else inQuotes = !inQuotes;
-        } else if (c === ',' && !inQuotes) {
-          row.push(field); field = '';
-        } else if ((c === '\n' || c === '\r') && !inQuotes) {
-          if (field !== '' || row.length) { row.push(field); field = ''; rows.push(row); row = []; }
-          if (c === '\r' && n === '\n') i++;
-        } else { field += c; }
-      }
-      if (field !== '' || row.length) { row.push(field); rows.push(row); }
-      return rows;
-    }
+            // Remove loading text
+            document.getElementById('loading').style.display = 'none';
+            
+            // Draw chart
+            Plotly.newPlot('chart-container', plotData, layout, {responsive: true, displayModeBar: false});
+        }
 
-    async function initData() {
-      try {
-        const res = await fetch(CSV_URL);
-        const text = await res.text();
-        const rows = parseCSV(text);
-        const getVal = (r) => (rows[r] && rows[r][1]) ? rows[r][1].trim() : '---';
-        
-        const data = [
-           { label: 'Item', val: getVal(0) },
-           { label: 'Material', val: getVal(2) },
-           { label: 'Price', val: getVal(3) },
-           { label: 'Wait', val: getVal(4) }
-        ];
+        // Run on load
+        init();
 
-        const container = document.getElementById('metaData');
-        container.innerHTML = '';
-        
-        data.forEach((item, index) => {
-          const div = document.createElement('div');
-          div.className = 'meta-row';
-          div.innerHTML = `<span style="text-align:left">${item.label}</span> <span style="text-align:right">${item.val}</span>`;
-          container.appendChild(div);
-          setTimeout(() => div.classList.add('visible'), index * 200 + 500);
-        });
-
-      } catch (e) {
-        console.error("Sheet load failed", e);
-        document.getElementById('metaData').innerHTML = '<div class="meta-row visible">DATA CONNECTION LOST</div>';
-      }
-    }
-
-    /* --- THE HAVOC BUTTON --- */
-    const btn = document.getElementById('runBtn');
-    const area = document.getElementById('btnArea');
-    let clicks = 0;
-
-    function moveButton(e) {
-      const areaRect = area.getBoundingClientRect();
-      const btnRect = btn.getBoundingClientRect();
-      const maxX = areaRect.width - btnRect.width;
-      const maxY = areaRect.height - btnRect.height;
-      const x = Math.random() * maxX;
-      const y = Math.random() * maxY;
-
-      btn.style.left = x + 'px';
-      btn.style.top = y + 'px';
-      btn.style.transform = 'translate(0,0)'; 
-
-      clicks++;
-      if (clicks > 8) triggerLockout();
-    }
-
-    btn.addEventListener('mouseover', moveButton);
-    btn.addEventListener('touchstart', (e) => { e.preventDefault(); moveButton(); }, { passive: false });
-    btn.addEventListener('click', (e) => { e.preventDefault(); triggerLockout(); });
-
-    /* --- LOCKOUT --- */
-    function triggerLockout() {
-      const screen = document.getElementById('lockoutScreen');
-      const timerEl = document.getElementById('lockoutTimer');
-      screen.style.display = 'flex';
-      document.getElementById('mainContainer').style.display = 'none';
-      
-      let timeLeft = 600;
-      const tick = () => {
-        timeLeft--;
-        const m = Math.floor(timeLeft / 60);
-        const s = timeLeft % 60;
-        timerEl.textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-        if(timeLeft <= 0) window.location.reload();
-      };
-      setInterval(tick, 1000);
-      tick();
-    }
-
-    /* --- INIT --- */
-    setTimeout(() => typeText("Welcome to waitlist."), 800);
-    initData();
-
-  </script>
+    </script>
 </body>
 </html>
