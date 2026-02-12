@@ -30,7 +30,6 @@
             overflow: hidden;
         }
 
-        /* --- HEADER --- */
         header {
             border-bottom: 2px solid var(--bb-orange);
             padding-bottom: 10px;
@@ -61,7 +60,6 @@
             text-shadow: 0 0 5px rgba(255, 153, 0, 0.5);
         }
 
-        /* --- CHART AREA --- */
         #chart-container {
             flex-grow: 1;
             width: 100%;
@@ -104,13 +102,12 @@
     </div>
 
     <div class="footer">
-        SOURCE: GOOGLE SHEETS // CLICK TILE TO ENLARGE
+        SOURCE: GOOGLE SHEETS // CLICK TILE TO EXPAND
     </div>
 
     <script>
         const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRj4frRRj12rs9PbuIxwY6h6xyJHbxno1CQCUl2_fTek-CvKPnYYVwCZoa0t47qB-yzKSJKhU18dYcZ/pub?output=csv';
 
-        // Helper: Clean numbers
         function parseNumber(val) {
             if (val === undefined || val === null || val === '') return 0;
             const clean = val.toString().replace(/[^0-9.-]/g, '');
@@ -143,54 +140,51 @@
                 answerEl.style.color = '#ff3333';
             }
 
-            // 2. Prepare Treemap Arrays
-            // To make it "Enlarge" on click, we need a hierarchy:
-            // Root -> Stock (Parent) -> Stock_Detail (Child)
+            // 2. Prepare Data Structure
+            // Root -> Stock (Main View) -> Details (Zoomed View)
             
             let ids = ["PORTFOLIO"];
             let labels = ["PORTFOLIO"];
             let parents = [""];
-            let values = [0]; // Root value calculated by children
-            let colors = [0]; // Neutral color for root
-            let texts = [""]; // No text for root
+            let values = [0];
+            let colors = [0]; 
 
-            // Loop starting Row 4 (index 3)
             for (let i = 3; i < rows.length; i++) {
                 const row = rows[i];
-                const ticker = row[0]; // Col A
+                const ticker = row[0];
 
                 if (ticker && ticker.trim() !== "") {
-                    // Extract Raw Data
-                    const weight = parseNumber(row[3]); // D (Size)
-                    const changePct = parseNumber(row[4]); // E (Color)
+                    // Extract Values
+                    const weight = parseNumber(row[3]); 
+                    const changePct = parseNumber(row[4]); 
                     
-                    // Detailed Info (Columns G-L)
-                    const price = row[6] || "-";
-                    const high = row[7] || "-";
-                    const low = row[8] || "-";
-                    const changeAbs = row[9] || "-";
-                    const pe = row[10] || "-";
-                    const eps = row[11] || "-";
+                    // Detailed Info (Check for missing data to avoid 'undefined')
+                    const price = row[6] ? row[6] : "-";
+                    const high = row[7] ? row[7] : "-";
+                    const low = row[8] ? row[8] : "-";
+                    const changeAbs = row[9] ? row[9] : "-";
+                    const pe = row[10] ? row[10] : "-";
+                    const eps = row[11] ? row[11] : "-";
 
-                    // --- LAYER 1: The Stock Box (Visible in Main View) ---
-                    // This acts as the container. Clicking this zooms in.
+                    // --- LAYER 1: The Stock Tile (Visible Initially) ---
+                    // Parent: PORTFOLIO
                     ids.push(ticker);
-                    labels.push(ticker);
+                    // Label shows Ticker + %
+                    labels.push(`<b>${ticker}</b><br>${changePct}%`);
                     parents.push("PORTFOLIO");
                     values.push(weight > 0 ? weight : 0.1); 
                     colors.push(changePct);
-                    
-                    // Text for the main tile (Simple)
-                    texts.push(`<b>${ticker}</b><br>${changePct}%`);
 
-                    // --- LAYER 2: The Detail Box (Visible when Enlarged) ---
-                    // This is the child node that holds the detailed stats
+                    // --- LAYER 2: The Detail View (Visible on Click) ---
+                    // Parent: The Stock Ticker from Layer 1
                     const detailId = ticker + "_DETAIL";
                     
-                    // Format the detail text block
+                    // We format this text to show ONLY the stats, not the ticker again
+                    // The Ticker will appear in the navigation header automatically when zoomed
                     const detailText = `
-                        <span style='font-size: 2em; font-weight:bold'>${ticker}</span><br>
-                        <span style='font-size: 1.2em'>${changePct}%</span><br><br>
+                        <br>
+                        <span style='font-size: 1.5em; font-weight:bold;'>${changePct}%</span><br>
+                        ----------------<br>
                         Price: ${price}<br>
                         Change $: ${changeAbs}<br>
                         High: ${high}<br>
@@ -200,18 +194,17 @@
                     `;
 
                     ids.push(detailId);
-                    labels.push(detailText); // We use label to render the big text
-                    parents.push(ticker); // Parent is the Stock Ticker
-                    values.push(weight > 0 ? weight : 0.1);
-                    colors.push(changePct); // Inherit color
-                    texts.push(""); // Redundant if using label
+                    labels.push(detailText); 
+                    parents.push(ticker); 
+                    values.push(weight > 0 ? weight : 0.1); // Match parent size
+                    colors.push(changePct); // Match parent color
                 }
             }
 
-            renderChart(ids, labels, parents, values, colors, texts);
+            renderChart(ids, labels, parents, values, colors);
         }
 
-        function renderChart(ids, labels, parents, values, colors, texts) {
+        function renderChart(ids, labels, parents, values, colors) {
             const data = [{
                 type: 'treemap',
                 ids: ids,
@@ -222,20 +215,20 @@
                     colors: colors,
                     colorscale: [
                         [0, '#cc0000'],   // Red
-                        [0.5, '#1a1a1a'], // Dark Grey (Neutral)
+                        [0.5, '#222222'], // Dark Grey
                         [1, '#00cc00']    // Green
                     ],
                     cmid: 0,
                     line: { width: 1, color: '#000' }
                 },
-                text: texts, // This shows on hover or in the box depending on config
-                textinfo: "label+text", 
-                texttemplate: "%{label}<br>%{text}", // How the text appears
-                hoverinfo: "label+value+text",
-                textfont: { family: 'Courier New', color: '#ffffff' },
+                textinfo: "label", // Only show the label (which contains our custom HTML)
+                hoverinfo: "label",
+                textfont: { family: 'Courier New', color: '#ffffff', size: 14 },
                 
-                // This enables the "Zoom" animation
-                maxdepth: 2 
+                // Settings for interaction
+                tiling: { packing: "squarify" },
+                pathbar: { visible: true }, // Shows the navigation path (Portfolio > Ticker)
+                maxdepth: 2
             }];
 
             const layout = {
