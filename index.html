@@ -1,88 +1,235 @@
-<script>
-    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRj4frRRj12rs9PbuIxwY6h6xyJHbxno1CQCUl2_fTek-CvKPnYYVwCZoa0t47qB-yzKSJKhU18dYcZ/pub?output=csv';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Heatmap</title>
+    
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
-    function parseNumber(val) {
-        if (val === undefined || val === null || val === '') return 0;
-        // This regex removes everything EXCEPT numbers, dots, and minus signs
-        const clean = val.toString().replace(/[^0-9.-]/g, '');
-        const num = parseFloat(clean);
-        return isNaN(num) ? 0 : num;
-    }
-
-    function init() {
-        Papa.parse(SHEET_URL, {
-            download: true,
-            header: false,
-            complete: function(results) {
-                renderDashboard(results.data);
-            }
-        });
-    }
-
-    function renderDashboard(rows) {
-        const marketAnswer = rows[0][4]; 
-        const answerEl = document.getElementById('market-answer');
-        answerEl.innerText = marketAnswer ? marketAnswer.toUpperCase() : "N/A";
-        
-        if(marketAnswer && marketAnswer.toLowerCase().includes('yes')) {
-            answerEl.style.color = '#33ff33';
-        } else {
-            answerEl.style.color = '#ff3333';
+    <style>
+        :root {
+            --bb-black: #000000;
+            --bb-orange: #ff9900;
+            --bb-text: #e0e0e0;
+            --bb-green: #33ff33;
+            --bb-red: #ff3333;
         }
 
-        let tickers = [];
-        let weights = [];
-        let changes = [];
-        let textLabels = [];
-
-        // Loop from Row 4 (index 3) downwards
-        for (let i = 3; i < rows.length; i++) {
-            const row = rows[i];
-            const ticker = row[0];
-            const weightVal = row[3];
-            const changeVal = row[4];
-
-            // Only add if there is a ticker name and at least one value
-            if (ticker && ticker.trim() !== "" && (weightVal || changeVal)) {
-                const weight = parseNumber(weightVal);
-                const change = parseNumber(changeVal);
-
-                tickers.push(ticker);
-                weights.push(weight > 0 ? weight : 0.1); // Ensure tile has at least tiny size
-                changes.push(change);
-                textLabels.push(`${ticker}<br>Change: ${change}%`);
-            }
+        body {
+            background-color: var(--bb-black);
+            color: var(--bb-orange);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 20px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
         }
 
-        const plotData = [{
-            type: 'treemap',
-            labels: tickers,
-            parents: tickers.map(() => ""),
-            values: weights,
-            marker: {
-                colors: changes,
-                colorscale: [
-                    [0, '#ff3333'],   // Red
-                    [0.5, '#222222'], // Dark Grey/Black at 0%
-                    [1, '#33ff33']    // Green
-                ],
-                cmid: 0,
-                line: { width: 1, color: '#000' }
-            },
-            texttemplate: "<b>%{label}</b><br>%{color:.2f}%",
-            hoverinfo: "text",
-            textfont: { family: 'Courier New', color: '#fff' }
-        }];
+        header {
+            border-bottom: 2px solid var(--bb-orange);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
 
-        const layout = {
-            margin: {t: 0, l: 0, r: 0, b: 0},
-            paper_bgcolor: '#000',
-            plot_bgcolor: '#000'
-        };
+        .terminal-text {
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
 
-        document.getElementById('loading').style.display = 'none';
-        Plotly.newPlot('chart-container', plotData, layout, {responsive: true, displayModeBar: false});
-    }
+        #market-question {
+            color: var(--bb-text);
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
 
-    init();
-</script>
+        #market-answer {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--bb-orange);
+            text-shadow: 0 0 5px rgba(255, 153, 0, 0.5);
+        }
+
+        #chart-container {
+            flex-grow: 1;
+            width: 100%;
+            min-height: 500px;
+            border: 1px solid #333;
+        }
+
+        .footer {
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: #555;
+            text-align: right;
+        }
+
+        /* Loading State */
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--bb-orange);
+            font-size: 1.5rem;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div>
+            <div id="market-question">Did you beat the market today?</div>
+            <div id="market-answer">LOADING...</div>
+        </div>
+        <div class="terminal-text">PORTFOLIO HEATMAP <span style="font-size:0.8em; color:#555;">>> LIVE</span></div>
+    </header>
+
+    <div id="chart-container">
+        <div id="loading">FETCHING DATA...</div>
+    </div>
+
+    <div class="footer">
+        DATA SOURCE: GOOGLE SHEETS // UPDATED LIVE
+    </div>
+
+    <script>
+        // The URL to your specific published Google Sheet CSV
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRj4frRRj12rs9PbuIxwY6h6xyJHbxno1CQCUl2_fTek-CvKPnYYVwCZoa0t47qB-yzKSJKhU18dYcZ/pub?output=csv';
+
+        // Helper to parse currency/percentage strings into pure numbers
+        function parseNumber(str) {
+            if (!str) return 0;
+            // Remove % signs, commas, and trim whitespace
+            const cleanStr = str.toString().replace(/[%,]/g, '').trim();
+            return parseFloat(cleanStr) || 0;
+        }
+
+        function init() {
+            Papa.parse(SHEET_URL, {
+                download: true,
+                header: false, // We use index based parsing as rows are specific
+                complete: function(results) {
+                    try {
+                        const data = results.data;
+                        renderDashboard(data);
+                    } catch (e) {
+                        console.error(e);
+                        document.getElementById('market-answer').innerText = "DATA ERROR";
+                        document.getElementById('loading').innerText = "ERROR PARSING DATA";
+                    }
+                },
+                error: function(err) {
+                    console.error(err);
+                    document.getElementById('market-answer').innerText = "CONN ERROR";
+                }
+            });
+        }
+
+        function renderDashboard(rows) {
+            // 1. Extract the "Beat the Market" answer from Cell E1 (Row 0, Col 4)
+            // Note: Array index 0 is Row 1, Index 4 is Column E
+            const marketAnswer = rows[0][4]; 
+            const answerEl = document.getElementById('market-answer');
+            answerEl.innerText = marketAnswer ? marketAnswer.toUpperCase() : "N/A";
+            
+            // Color code the answer
+            if(marketAnswer && marketAnswer.toLowerCase().includes('yes')) {
+                answerEl.style.color = '#33ff33'; // Green
+            } else if (marketAnswer && marketAnswer.toLowerCase().includes('no')) {
+                answerEl.style.color = '#ff3333'; // Red
+            }
+
+            // 2. Extract Heatmap Data
+            // Data starts at Row 4 (Array index 3)
+            // Col A (0) = Stock
+            // Col D (3) = Portfolio % (Size)
+            // Col E (4) = Daily Change % (Color)
+            
+            let tickers = [];
+            let weights = [];
+            let changes = [];
+            let textLabels = [];
+
+            // Loop from row index 3 down to the end
+            for (let i = 3; i < rows.length; i++) {
+                const row = rows[i];
+                
+                // Ensure row has data (check if Ticker exists)
+                if (row[0]) {
+                    const ticker = row[0];
+                    const weight = parseNumber(row[3]);
+                    const change = parseNumber(row[4]);
+
+                    tickers.push(ticker);
+                    weights.push(weight);
+                    changes.push(change);
+                    
+                    // Create hover text
+                    textLabels.push(`${ticker}<br>Weight: ${weight}%<br>Change: ${change}%`);
+                }
+            }
+
+            // 3. Render Plotly Heatmap (Treemap)
+            const plotData = [{
+                type: 'treemap',
+                labels: tickers,
+                parents: tickers.map(() => ""), // No hierarchy, just flat tiles
+                values: weights,
+                marker: {
+                    colors: changes,
+                    colorscale: [
+                        [0, '#ff0000'],   // Deep Red for big drops
+                        [0.5, '#000000'], // Black for zero/neutral
+                        [1, '#00ff00']    // Bright Green for big gains
+                    ],
+                    cmid: 0, // Center the color scale at 0% change
+                    line: { width: 2, color: '#000' } // Border between tiles
+                },
+                text: textLabels,
+                textinfo: "label+value+percent entry", // Show label and value
+                texttemplate: "<b>%{label}</b><br>%{color:.2f}%", // Custom tile text
+                hoverinfo: "text",
+                textfont: {
+                    family: 'Courier New',
+                    size: 16,
+                    color: '#ffffff'
+                }
+            }];
+
+            const layout = {
+                margin: {t: 0, l: 0, r: 0, b: 0},
+                paper_bgcolor: '#000000',
+                plot_bgcolor: '#000000',
+                font: {
+                    family: 'Courier New',
+                    color: '#ff9900'
+                }
+            };
+
+            // Remove loading text
+            document.getElementById('loading').style.display = 'none';
+            
+            // Draw chart
+            Plotly.newPlot('chart-container', plotData, layout, {responsive: true, displayModeBar: false});
+        }
+
+        // Run on load
+        init();
+
+    </script>
+</body>
+</html>
