@@ -1,404 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>WAITLIST</title>
-  
-  <style>
-    :root {
-      --bg: #0000FF;
-      --fg: #ffffff;
-      /* Uniform font stack */
-      --font-stack: Helvetica, Arial, sans-serif;
-      /* Uniform font size for main elements */
-      --base-size: 18px; 
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Ultimate Question</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            /* Create enough height to allow for significant scrolling */
+            height: 500vh;
+            margin: 0;
+            overflow-x: hidden;
+            transition: background-color 0.1s linear;
+        }
 
-    * { box-sizing: border-box; }
+        #main-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 100%;
+            z-index: 10;
+        }
 
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      background: var(--bg);
-      color: var(--fg);
-      font-family: var(--font-stack);
-      font-weight: 400; /* No bold */
-      font-size: var(--base-size);
-      overflow-x: hidden;
-      overscroll-behavior: none;
-      -webkit-font-smoothing: antialiased;
-    }
+        .party-emoji {
+            position: absolute;
+            font-size: 2rem;
+            pointer-events: none;
+            animation: fall 3s linear forwards;
+        }
 
-    /* --- UTILITIES --- */
-    .mono {
-      font-family: "Courier New", Courier, monospace;
-      text-transform: uppercase;
-      font-size: 0.8em; /* Keep lockout text small */
-    }
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
 
-    .container {
-      width: 100%;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      position: relative;
-    }
+        #happy-message {
+            transition: all 0.5s ease-out;
+            transform: scale(0);
+            opacity: 0;
+        }
 
-    /* --- CSS CLOCK --- */
-    .clock-wrap {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      padding-top: 40px;
-      padding-bottom: 20px;
-      background: var(--bg);
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      transition: transform 0.1s;
-    }
+        #happy-message.show {
+            transform: scale(1.2);
+            opacity: 1;
+        }
 
-    .clock {
-      width: 200px;
-      height: 200px;
-      border: 2px solid var(--fg);
-      border-radius: 50%;
-      position: relative;
-    }
-
-    .hand {
-      position: absolute;
-      background: var(--fg);
-      transform-origin: bottom center;
-      left: 50%;
-      bottom: 50%;
-      border-radius: 2px;
-      animation-fill-mode: forwards; 
-      animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1.0); /* Smooth easing */
-    }
-
-    .hand.hour {
-      width: 2px;
-      height: 45px; /* Shortened */
-      margin-left: -1px;
-      /* Spin clockwise to approx 10 o'clock position (300 deg) */
-      animation-name: spin-hour;
-      animation-duration: 2.5s;
-    }
-
-    .hand.minute {
-      width: 2px;
-      height: 65px; /* Shortened */
-      margin-left: -1px;
-      /* Spin clockwise to approx 2 o'clock position (60 deg) */
-      animation-name: spin-minute;
-      animation-duration: 2.8s;
-    }
-
-    /* Clockwise rotation logic: Start at 0, do a full circle (360), then land on target */
-    @keyframes spin-hour {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(660deg); } /* 360 + 300 (10 o'clock) */
-    }
-
-    @keyframes spin-minute {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(420deg); } /* 360 + 60 (2 o'clock) */
-    }
-
-    /* --- MAIN STAGE --- */
-    .stage {
-      width: 100%;
-      max-width: 800px;
-      padding: 20px;
-      margin-bottom: 100px;
-      text-align: center;
-      z-index: 20;
-      background: var(--bg);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    /* Typewriter Heading */
-    .heading-wrap {
-      /* Same size as base font */
-      font-size: var(--base-size); 
-      margin: 40px 0;
-      min-height: 1.2em;
-      font-weight: 400; /* No bold */
-      display: inline-block;
-    }
-    
-    .blinking-cursor {
-      animation: blink 1s infinite step-end;
-      margin-left: 2px;
-      font-weight: 400;
-    }
-    @keyframes blink { 50% { opacity: 0; } }
-
-    /* Product Image Container */
-    .img-container {
-      width: 100%;
-      max-width: 500px;
-      margin: 0 auto 40px auto;
-      background-color: var(--bg);
-      border-radius: 4px;
-      overflow: hidden;
-    }
-
-    .product-img {
-      width: 100%;
-      height: auto;
-      display: block;
-      filter: contrast(1.3) brightness(1.1);
-      mix-blend-mode: multiply; 
-    }
-
-    /* Meta Data Table */
-    .meta-data {
-      text-align: center;
-      border-top: 1px solid var(--fg);
-      margin: 0 auto 60px auto;
-      /* Narrow width as requested */
-      width: 100%;
-      max-width: 260px; 
-    }
-
-    .meta-row {
-      display: flex;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--fg);
-      padding: 12px 0;
-      /* Slightly smaller font for table */
-      font-size: 14px; 
-      opacity: 0;
-      transform: translateY(10px);
-      transition: opacity 0.5s, transform 0.5s;
-    }
-    .meta-row.visible { opacity: 1; transform: translateY(0); }
-
-    /* --- THE BUTTON AREA --- */
-    .btn-area {
-      position: relative;
-      width: 100%;
-      max-width: 600px;
-      height: 300px; 
-    }
-
-    .waitlist-btn {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      padding: 14px 24px;
-      
-      /* New Button Style: Blue BG, White Text, White Border */
-      background: var(--bg);
-      color: var(--fg);
-      border: 1px solid var(--fg);
-      
-      font-family: var(--font-stack);
-      font-weight: 400; /* No bold */
-      font-size: var(--base-size); /* Same size as header */
-      
-      cursor: pointer;
-      border-radius: 4px;
-      white-space: nowrap;
-      transition: top 0.1s ease, left 0.1s ease;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    /* --- LOCKOUT SCREEN --- */
-    .lockout {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: var(--bg);
-      color: var(--fg);
-      display: none;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-      text-align: center;
-    }
-
-    .lockout-msg { margin-bottom: 10px; letter-spacing: 1px; }
-    .timer { font-weight: 400; }
-
-  </style>
+        .btn-transition {
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+    </style>
 </head>
-<body>
+<body class="bg-white">
 
-  <div class="container" id="mainContainer">
-    
-    <div class="clock-wrap" id="clockWrap">
-      <div class="clock">
-        <div class="hand hour"></div>
-        <div class="hand minute"></div>
-      </div>
-    </div>
+    <div id="main-container" class="px-4">
+        <h1 id="question-text" class="text-5xl md:text-7xl font-black mb-12 drop-shadow-lg select-none">
+            Do you like boys?
+        </h1>
 
-    <main class="stage">
-      <div class="heading-wrap" id="headingWrap">
-        <span id="typeTarget"></span>
-      </div>
-
-      <div class="img-container">
-        <img src="https://i.ibb.co/hFDSgSMb/tshirt.jpg" alt="Item" class="product-img" />
-      </div>
-
-      <div class="meta-data" id="metaData">
+        <div class="flex flex-wrap justify-center gap-6">
+            <button id="yes-btn" class="btn-transition bg-white text-black px-12 py-4 rounded-full text-2xl font-bold shadow-2xl hover:scale-110 active:scale-95">
+                Yes
+            </button>
+            
+            <button id="no-btn" class="btn-transition bg-white text-black px-12 py-4 rounded-full text-2xl font-bold shadow-2xl hover:scale-110 active:scale-95">
+                No
+            </button>
         </div>
 
-      <div class="btn-area" id="btnArea">
-        <button class="waitlist-btn" id="runBtn">Join the waitlist.</button>
-      </div>
+        <div id="happy-message" class="mt-12 text-4xl md:text-6xl font-black text-white drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]">
+            SO HAPPY FOR YOU! 🏳️‍🌈
+        </div>
+    </div>
 
-    </main>
-  </div>
-
-  <div class="lockout" id="lockoutScreen">
-    <div class="lockout-msg mono">Due to high demand, you have been placed in a queue. <BR><BR> Please wait to join waitlist.</div>
-    <div class="timer mono" id="lockoutTimer">00:00</div>
-  </div>
-
-  <script>
-    /* --- CONFIG --- */
-    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6aU1_jB0juldfdNBs-KX3XLLqOuAoZDNpg_znvr_x1ToUAariHKo2Gz-REVye58V_nenvXETUOTZk/pub?output=csv';
-
-    /* --- SCROLL SHRINK EFFECT --- */
-    window.addEventListener('scroll', () => {
-      const scrollY = window.scrollY;
-      const clock = document.getElementById('clockWrap');
-      const scale = Math.max(0.5, 1 - (scrollY / 400));
-      clock.style.transform = `scale(${scale})`;
-    });
-
-    /* --- TYPEWRITER --- */
-    async function typeText(text) {
-      const target = document.getElementById('typeTarget');
-      const wrap = document.getElementById('headingWrap');
-      target.textContent = '';
-      
-      for (let i = 0; i < text.length; i++) {
-        target.textContent += text.charAt(i);
-        await new Promise(r => setTimeout(r, 60)); 
-      }
-
-      // Append blinking cursor AFTER typing
-      const cursor = document.createElement('span');
-      cursor.className = 'blinking-cursor';
-      cursor.innerHTML = '|';
-      wrap.appendChild(cursor);
-    }
-
-    /* --- DATA LOADING --- */
-    function parseCSV(text) {
-      const rows = [];
-      let row = [], field = '', inQuotes = false;
-      for (let i = 0; i < text.length; i++) {
-        const c = text[i], n = text[i+1];
-        if (c === '"') {
-          if (inQuotes && n === '"') { field += '"'; i++; }
-          else inQuotes = !inQuotes;
-        } else if (c === ',' && !inQuotes) {
-          row.push(field); field = '';
-        } else if ((c === '\n' || c === '\r') && !inQuotes) {
-          if (field !== '' || row.length) { row.push(field); field = ''; rows.push(row); row = []; }
-          if (c === '\r' && n === '\n') i++;
-        } else { field += c; }
-      }
-      if (field !== '' || row.length) { row.push(field); rows.push(row); }
-      return rows;
-    }
-
-    async function initData() {
-      try {
-        const res = await fetch(CSV_URL);
-        const text = await res.text();
-        const rows = parseCSV(text);
-        const getVal = (r) => (rows[r] && rows[r][1]) ? rows[r][1].trim() : '---';
+    <!-- Scroll Indicator -->
+    <div class="fixed bottom-8 left-1/2 -translate-x-1/2 text-white/50 animate-bounce uppercase tracking-widest text-sm font-bold">
         
-        const data = [
-           { label: 'Item', val: getVal(0) },
-           { label: 'Material', val: getVal(2) },
-           { label: 'Price', val: getVal(3) },
-           { label: 'Wait', val: getVal(4) }
-        ];
+    </div>
 
-        const container = document.getElementById('metaData');
-        container.innerHTML = '';
-        
-        data.forEach((item, index) => {
-          const div = document.createElement('div');
-          div.className = 'meta-row';
-          div.innerHTML = `<span style="text-align:left">${item.label}</span> <span style="text-align:right">${item.val}</span>`;
-          container.appendChild(div);
-          setTimeout(() => div.classList.add('visible'), index * 200 + 500);
+    <script>
+        const body = document.body;
+        const questionText = document.getElementById('question-text');
+        const yesBtn = document.getElementById('yes-btn');
+        const noBtn = document.getElementById('no-btn');
+        const happyMessage = document.getElementById('happy-message');
+
+        // Rainbow Scroll Logic
+        window.addEventListener('scroll', () => {
+            const scrollPercent = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
+            const hue = Math.floor(scrollPercent * 360);
+            
+            // Background changes through the rainbow
+            body.style.backgroundColor = `hsl(${hue}, 70%, 60%)`;
+            
+            // Text changes color (offsetting the hue for contrast)
+            questionText.style.color = `hsl(${(hue + 180) % 360}, 100%, 30%)`;
         });
 
-      } catch (e) {
-        console.error("Sheet load failed", e);
-        document.getElementById('metaData').innerHTML = '<div class="meta-row visible">DATA CONNECTION LOST</div>';
-      }
-    }
+        function launchParty() {
+            const emojis = ['🎉', '🥳', '🌈', '✨', '💖', '🎊', '🕺'];
+            for (let i = 0; i < 100; i++) {
+                setTimeout(() => {
+                    const emoji = document.createElement('div');
+                    emoji.className = 'party-emoji';
+                    emoji.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                    emoji.style.left = Math.random() * 100 + 'vw';
+                    emoji.style.fontSize = (Math.random() * 2 + 1) + 'rem';
+                    document.body.appendChild(emoji);
+                    
+                    // Clean up
+                    setTimeout(() => emoji.remove(), 3000);
+                }, i * 20);
+            }
+        }
 
-    /* --- THE HAVOC BUTTON --- */
-    const btn = document.getElementById('runBtn');
-    const area = document.getElementById('btnArea');
-    let clicks = 0;
+        yesBtn.addEventListener('click', () => {
+            launchParty();
+        });
 
-    function moveButton(e) {
-      const areaRect = area.getBoundingClientRect();
-      const btnRect = btn.getBoundingClientRect();
-      const maxX = areaRect.width - btnRect.width;
-      const maxY = areaRect.height - btnRect.height;
-      const x = Math.random() * maxX;
-      const y = Math.random() * maxY;
+        noBtn.addEventListener('click', function() {
+            // Transform the No button into a Yes button
+            this.innerText = 'Yes';
+            this.classList.remove('bg-white');
+            this.classList.add('bg-green-400', 'text-white');
+            
+            // Change functionality to match 'Yes'
+            this.onclick = launchParty;
 
-      btn.style.left = x + 'px';
-      btn.style.top = y + 'px';
-      btn.style.transform = 'translate(0,0)'; 
+            // Show the "So happy for you" message
+            happyMessage.classList.add('show');
+            
+            // Trigger the initial party
+            launchParty();
+        });
 
-      clicks++;
-      if (clicks > 8) triggerLockout();
-    }
-
-    btn.addEventListener('mouseover', moveButton);
-    btn.addEventListener('touchstart', (e) => { e.preventDefault(); moveButton(); }, { passive: false });
-    btn.addEventListener('click', (e) => { e.preventDefault(); triggerLockout(); });
-
-    /* --- LOCKOUT --- */
-    function triggerLockout() {
-      const screen = document.getElementById('lockoutScreen');
-      const timerEl = document.getElementById('lockoutTimer');
-      screen.style.display = 'flex';
-      document.getElementById('mainContainer').style.display = 'none';
-      
-      let timeLeft = 600;
-      const tick = () => {
-        timeLeft--;
-        const m = Math.floor(timeLeft / 60);
-        const s = timeLeft % 60;
-        timerEl.textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-        if(timeLeft <= 0) window.location.reload();
-      };
-      setInterval(tick, 1000);
-      tick();
-    }
-
-    /* --- INIT --- */
-    setTimeout(() => typeText("Welcome to waitlist."), 800);
-    initData();
-
-  </script>
+        // Initialize background color
+        body.style.backgroundColor = `hsl(0, 70%, 60%)`;
+        questionText.style.color = `hsl(180, 100%, 30%)`;
+    </script>
 </body>
 </html>
